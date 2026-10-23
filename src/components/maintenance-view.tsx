@@ -76,13 +76,6 @@ const PRIORITIES = [
 
 const PRIORITY_CLS = Object.fromEntries(PRIORITIES.map((p) => [p.id, p.cls]))
 
-const COLUMNS: { ids: ReportStatus[]; label: string; accent: string; topBorder: string; empty: string }[] = [
-  { ids: ['PENDING'], label: 'Pending admin check', accent: 'text-amber-500', topBorder: 'border-t-3 border-t-amber-500', empty: 'No pending requests' },
-  { ids: ['APPROVED', 'IN_PROGRESS'], label: 'Approved / in progress', accent: 'text-sky-500', topBorder: 'border-t-3 border-t-sky-500', empty: 'Nothing being repaired right now' },
-  { ids: ['PROOF_SUBMITTED', 'AWAITING_ADMIN'], label: 'Proof Submitted / Review', accent: 'text-purple-500', topBorder: 'border-t-3 border-t-purple-500', empty: 'No repairs awaiting review' },
-  { ids: ['RESOLVED'], label: 'Resolved', accent: 'text-emerald-500', topBorder: 'border-t-3 border-t-emerald-500', empty: 'No resolved requests yet' },
-]
-
 export function MaintenanceView() {
   const user = useUserStore((s) => s.user)
   const queryClient = useQueryClient()
@@ -93,6 +86,37 @@ export function MaintenanceView() {
   const [filterPriority, setFilterPriority] = useState<string>('ALL')
 
   const isAdmin = user?.role === 'ADMIN'
+
+  const columns = [
+    {
+      ids: ['PENDING'] as ReportStatus[],
+      label: lang === 'hi' ? 'लंबित जांच' : (isAdmin ? 'Pending admin check' : 'Submitted / Pending'),
+      accent: 'text-amber-500',
+      topBorder: 'border-t-3 border-t-amber-500',
+      empty: lang === 'hi' ? 'कोई लंबित अनुरोध नहीं' : 'No pending requests',
+    },
+    {
+      ids: ['APPROVED', 'IN_PROGRESS'] as ReportStatus[],
+      label: lang === 'hi' ? 'प्रगति पर' : (isAdmin ? 'Approved / in progress' : 'In Progress'),
+      accent: 'text-sky-500',
+      topBorder: 'border-t-3 border-t-sky-500',
+      empty: lang === 'hi' ? 'वर्तमान में कोई मरम्मत नहीं' : 'Nothing being repaired right now',
+    },
+    {
+      ids: ['PROOF_SUBMITTED', 'AWAITING_ADMIN'] as ReportStatus[],
+      label: lang === 'hi' ? 'समीक्षाधीन' : (isAdmin ? 'Proof Submitted / Review' : 'Under Review & Confirmation'),
+      accent: 'text-purple-500',
+      topBorder: 'border-t-3 border-t-purple-500',
+      empty: lang === 'hi' ? 'कोई समीक्षाधीन कार्य नहीं' : 'No repairs under review',
+    },
+    {
+      ids: ['RESOLVED'] as ReportStatus[],
+      label: lang === 'hi' ? 'पूर्ण' : 'Resolved',
+      accent: 'text-emerald-500',
+      topBorder: 'border-t-3 border-t-emerald-500',
+      empty: lang === 'hi' ? 'कोई हल की गई शिकायत नहीं' : 'No resolved requests yet',
+    },
+  ]
 
   const { data: verifData } = useQuery({
     queryKey: ['student-verifications'],
@@ -233,20 +257,22 @@ export function MaintenanceView() {
             )}
           </div>
 
-          {/* 3-Step Verification Pipeline */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-2xl border bg-muted/40 px-4 py-3 text-xs text-muted-foreground shadow-sm">
-            <span className="font-bold text-foreground flex items-center gap-1.5">
-              <ShieldCheck className="h-4 w-4 text-emerald-500" />
-              {lang === 'hi' ? '3-चरणीय सत्यापन प्रक्रिया:' : '3-Step Verification Process:'}
-            </span>
-            <span><b>1.</b> {lang === 'hi' ? 'शिकायत व तकनीशियन चयन' : 'Report & Field Technician Selection'}</span>
-            <span><b>2.</b> {lang === 'hi' ? 'मरम्मत उपरांत कैमरा फोटो व सत्यापन' : 'Camera Photo & Work Proof'}</span>
-            <span><b>3.</b> {lang === 'hi' ? 'उपयोगकर्ता पुष्टि व अंतिम सत्यापन' : 'User Confirmation & Final Resolution'}</span>
-          </div>
+          {/* 3-Step Verification Pipeline — ONLY for Administrators (Hidden for regular users/residents) */}
+          {isAdmin && (
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-2xl border bg-muted/40 px-4 py-3 text-xs text-muted-foreground shadow-sm">
+              <span className="font-bold text-foreground flex items-center gap-1.5">
+                <ShieldCheck className="h-4 w-4 text-emerald-500" />
+                {lang === 'hi' ? '3-चरणीय समाधान प्रक्रिया:' : '3-Step Resolution Process:'}
+              </span>
+              <span><b>1.</b> {lang === 'hi' ? 'शिकायत व तकनीशियन आवंटन' : 'Report & Field Technician Assignment'}</span>
+              <span><b>2.</b> {lang === 'hi' ? 'मरम्मत उपरांत कैमरा फोटो व प्रमाण' : 'Camera Photo & Work Proof'}</span>
+              <span><b>3.</b> {lang === 'hi' ? 'उपयोगकर्ता पुष्टि व अंतिम अनुमोदन' : 'User Confirmation & Final Resolution'}</span>
+            </div>
+          )}
 
           {/* Kanban Board Columns */}
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {COLUMNS.map((col) => {
+            {columns.map((col) => {
               const items = filtered.filter((r) => col.ids.includes(r.status))
               return (
                 <div key={col.label} className={cn('rounded-2xl border bg-card/70 p-3.5 space-y-3 shadow-sm card-3d', col.topBorder)}>
