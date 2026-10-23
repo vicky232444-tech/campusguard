@@ -8,6 +8,7 @@ import { useUserStore } from '@/lib/user-store'
 import { useLiveStore } from '@/lib/live-store'
 import type { DashboardData, Sensor, SensorReading, SosBroadcastRequest, MaintenanceReport, StudentVerification, VisitorLog, SecurityEvent } from '@/lib/types'
 import { StatCard, Pill, SEVERITY_STYLES, STATUS_STYLES, relTime, timeStr } from '@/components/shared'
+import { useI18n } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -44,6 +45,7 @@ const FEED_ICON: Record<string, React.ReactNode> = {
 function AdminDashboard() {
   const queryClient = useQueryClient()
   const liveReadings = useLiveStore((s) => s.readings)
+  const { lang, t } = useI18n()
   const [chartSensorId, setChartSensorId] = useState<string | null>(null)
 
   const { data: dash } = useQuery({
@@ -183,12 +185,12 @@ function AdminDashboard() {
 
       {/* Admin KPI Ribbon */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
-        <StatCard label="Active alerts" value={stats?.activeAlerts ?? '—'} icon={<AlertTriangle className="h-4 w-4" />} tone={stats && stats.activeAlerts > 0 ? 'warning' : 'success'} sub="all zones" />
-        <StatCard label="Active SOS" value={stats?.activeSos ?? '—'} icon={<Siren className="h-4 w-4" />} tone={stats && stats.activeSos > 0 ? 'danger' : 'success'} sub={pendingRequests.length > 0 ? `${pendingRequests.length} pending approval` : 'all clear'} />
-        <StatCard label="Student Records" value={studentRecords.length} icon={<UserCheck className="h-4 w-4" />} tone={pendingVerifications.length > 0 ? 'warning' : 'success'} sub={`${pendingVerifications.length} pending AI verify`} />
-        <StatCard label="Open repairs" value={stats?.openRepairs ?? '—'} icon={<Wrench className="h-4 w-4" />} tone={stats && stats.urgentRepairs > 0 ? 'danger' : 'info'} sub={stats && stats.urgentRepairs > 0 ? `${stats.urgentRepairs} urgent` : 'none urgent'} />
-        <StatCard label="Visitors inside" value={stats?.visitorsInside ?? '—'} icon={<Users className="h-4 w-4" />} tone="neutral" sub="checked in now" />
-        <StatCard label="Sensors online" value={stats ? `${stats.sensorsOnline}/${stats.sensorsTotal}` : '—'} icon={<Activity className="h-4 w-4" />} tone="success" sub="active grid" />
+        <StatCard label={t('dash.kpi.alerts')} value={stats?.activeAlerts ?? '—'} icon={<AlertTriangle className="h-4 w-4" />} tone={stats && stats.activeAlerts > 0 ? 'warning' : 'success'} sub={lang === 'hi' ? 'सभी क्षेत्र' : 'all zones'} />
+        <StatCard label={t('dash.kpi.sos')} value={stats?.activeSos ?? '—'} icon={<Siren className="h-4 w-4" />} tone={stats && stats.activeSos > 0 ? 'danger' : 'success'} sub={pendingRequests.length > 0 ? `${pendingRequests.length} ${lang === 'hi' ? 'स्वीकृति लंबित' : 'pending approval'}` : (lang === 'hi' ? 'कोई संकट नहीं' : 'all clear')} />
+        <StatCard label={t('dash.kpi.verif')} value={studentRecords.length} icon={<UserCheck className="h-4 w-4" />} tone={pendingVerifications.length > 0 ? 'warning' : 'success'} sub={`${pendingVerifications.length} ${lang === 'hi' ? 'AI जांच लंबित' : 'pending AI verify'}`} />
+        <StatCard label={t('dash.kpi.repairs')} value={stats?.openRepairs ?? '—'} icon={<Wrench className="h-4 w-4" />} tone={stats && stats.urgentRepairs > 0 ? 'danger' : 'info'} sub={stats && stats.urgentRepairs > 0 ? `${stats.urgentRepairs} ${lang === 'hi' ? 'अति आवश्यक' : 'urgent'}` : (lang === 'hi' ? 'सामान्य' : 'none urgent')} />
+        <StatCard label={t('dash.kpi.visitors')} value={stats?.visitorsInside ?? '—'} icon={<Users className="h-4 w-4" />} tone="neutral" sub={lang === 'hi' ? 'वर्तमान में अंदर' : 'checked in now'} />
+        <StatCard label={t('dash.kpi.sensors')} value={stats ? `${stats.sensorsOnline}/${stats.sensorsTotal}` : '—'} icon={<Activity className="h-4 w-4" />} tone="success" sub={lang === 'hi' ? 'सक्रिय ग्रिड' : 'active grid'} />
       </div>
 
       {/* Admin Telemetry Trends + Severity Charts */}
@@ -197,7 +199,7 @@ function AdminDashboard() {
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <div>
               <h3 className="text-sm font-bold flex items-center gap-2">
-                <Activity className="h-4 w-4 text-emerald-500" /> Sensor Telemetry Trend — 2 Hours
+                <Activity className="h-4 w-4 text-emerald-500" /> {t('dash.telemetry.trend')}
               </h3>
               <p className="text-xs text-muted-foreground">{selectedSensor ? `${selectedSensor.name} · ${selectedSensor.zone} (${selectedSensor.unit})` : 'Loading…'}</p>
             </div>
@@ -241,13 +243,13 @@ function AdminDashboard() {
           </div>
           <div className="mt-2 flex items-center gap-2 text-[11px] text-muted-foreground">
             <span className="h-2 w-2 rounded-full bg-red-500 inline-block" />
-            Red markers indicate telemetry values exceeding safe threshold limits
+            {lang === 'hi' ? 'लाल बिंदु सुरक्षित सीमा से अधिक टेलीमेट्री मान दर्शाते हैं' : 'Red markers indicate telemetry values exceeding safe threshold limits'}
           </div>
         </div>
 
         <div className="lg:col-span-2 space-y-4">
           <div className="rounded-2xl border bg-card p-4 shadow-sm">
-            <h3 className="text-sm font-bold mb-1">Alerts by Severity (24h)</h3>
+            <h3 className="text-sm font-bold mb-1">{t('dash.alerts.severity')}</h3>
             <div className="h-[120px]">
               {dash && (
                 <ResponsiveContainer width="100%" height="100%">
@@ -267,7 +269,7 @@ function AdminDashboard() {
           </div>
 
           <div className="rounded-2xl border bg-card p-4 shadow-sm">
-            <h3 className="text-sm font-bold mb-1">Repair Pipeline Status</h3>
+            <h3 className="text-sm font-bold mb-1">{t('dash.repair.pipeline')}</h3>
             <div className="h-[120px]">
               {dash && (
                 <ResponsiveContainer width="100%" height="100%">
@@ -291,7 +293,7 @@ function AdminDashboard() {
       <div className="grid gap-4 lg:grid-cols-5">
         <div className="lg:col-span-2 rounded-2xl border bg-card p-4 shadow-sm">
           <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
-            <Building2 className="h-4 w-4 text-emerald-500" /> Campus Zones Status
+            <Building2 className="h-4 w-4 text-emerald-500" /> {t('dash.building.zones')}
           </h3>
           <div className="space-y-2">
             {dash?.zoneStatus.map((z) => (
@@ -300,7 +302,7 @@ function AdminDashboard() {
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold truncate">{z.zone}</p>
                   <p className="text-[11px] text-muted-foreground">
-                    {z.totalSensors} sensors · {z.activeAlerts} alerts · {z.openRepairs} repairs
+                    {z.totalSensors} {lang === 'hi' ? 'सेंसर्स' : 'sensors'} · {z.activeAlerts} {lang === 'hi' ? 'अलर्ट' : 'alerts'} · {z.openRepairs} {lang === 'hi' ? 'मरम्मत' : 'repairs'}
                   </p>
                 </div>
                 <Pill label={z.status} className={SEVERITY_STYLES[z.status]} />
@@ -311,7 +313,7 @@ function AdminDashboard() {
 
         <div className="lg:col-span-3 rounded-2xl border bg-card p-4 shadow-sm">
           <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
-            <DoorOpen className="h-4 w-4 text-emerald-500" /> Campus Operations Feed
+            <DoorOpen className="h-4 w-4 text-emerald-500" /> {t('dash.operations.feed')}
           </h3>
           <div className="max-h-[320px] overflow-y-auto pr-1 space-y-2 [scrollbar-width:thin]">
             {dash?.recent.map((item) => (
@@ -343,19 +345,20 @@ function AdminDashboard() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 2. STUDENT DASHBOARD: Tailored Specifically for Student Safety & Services
+// 2. RESIDENT & STUDENT DASHBOARD: Universal Resident Safety & Facility Services
 // ─────────────────────────────────────────────────────────────────────────────
 function StudentDashboard() {
   const user = useUserStore((s) => s.user)
+  const { lang, t } = useI18n()
 
-  // Fetch student's own complaints
+  // Fetch resident's own complaints
   const { data: repData } = useQuery({
     queryKey: ['maintenance'],
     queryFn: () => api<{ reports: MaintenanceReport[] }>('/api/maintenance'),
   })
   const myReports = (repData?.reports ?? []).filter((r) => r.reportedById === user?.id || r.reportedBy === user?.name)
 
-  // Fetch student verification record
+  // Fetch resident record
   const { data: verifData } = useQuery({
     queryKey: ['student-verifications'],
     queryFn: () => api<{ records: StudentVerification[] }>('/api/students/verification'),
@@ -364,9 +367,8 @@ function StudentDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Student Top Welcome & Digital Identity Card */}
+      {/* Resident Top Welcome & Digital Identity Card (Verification mentions hidden for non-admins) */}
       <div className="grid gap-4 md:grid-cols-3">
-        {/* Digital Student Card with AI Verification Badge */}
         <div className="md:col-span-2 rounded-2xl border bg-gradient-to-br from-card via-card to-emerald-500/5 p-5 shadow-sm space-y-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -378,67 +380,66 @@ function StudentDashboard() {
               </div>
               <div>
                 <h2 className="text-lg font-black tracking-tight">{user?.name}</h2>
-                <p className="text-xs text-muted-foreground font-medium">{user?.dept || 'Computer Science & Engineering'}</p>
+                <p className="text-xs text-muted-foreground font-medium">{user?.dept || (lang === 'hi' ? 'आवासीय विंग A' : 'Residential Wing A')}</p>
                 <p className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 mt-0.5">
-                  ID: {myRecord?.rollNumber || 'CS-2024-0419'} · {user?.email}
+                  ID: {myRecord?.rollNumber || 'RES-2024-0419'} · {user?.email}
                 </p>
               </div>
             </div>
 
-            {/* AI Verification Badge */}
+            {/* Non-admin clean occupant status badge */}
             <div className="flex flex-col items-end">
-              {myRecord?.status === 'VERIFIED' ? (
-                <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 shadow-sm">
-                  <ShieldCheck className="h-4 w-4" />
-                  AI Verified Student
-                </div>
-              ) : (
-                <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-xs font-bold text-amber-600 dark:text-amber-400">
-                  <Clock className="h-3.5 w-3.5" />
-                  Verification Pending
-                </div>
-              )}
-              {myRecord?.aiConfidenceScore && (
-                <span className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
-                  <Sparkles className="h-3 w-3 text-emerald-500" />
-                  {myRecord.aiConfidenceScore}% AI Authenticity
-                </span>
-              )}
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 shadow-sm">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                {lang === 'hi' ? 'सक्रिय निवासी / सदस्य' : 'Active Resident / Occupant'}
+              </div>
+              <span className="text-[10px] text-muted-foreground mt-1 font-mono">
+                {lang === 'hi' ? 'सत्यापित खाता' : 'Account Active'}
+              </span>
             </div>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-3 border-t text-xs">
             <div className="rounded-xl bg-muted/40 p-2.5">
-              <span className="text-[10px] text-muted-foreground uppercase font-bold block">Hostel Room</span>
-              <span className="font-semibold text-foreground">{myRecord?.hostelRoom || 'Hostel Block B - Room 204'}</span>
+              <span className="text-[10px] text-muted-foreground uppercase font-bold block">
+                {lang === 'hi' ? 'फ्लैट / यूनिट / कमरा' : 'Flat / Unit / Room'}
+              </span>
+              <span className="font-semibold text-foreground">{myRecord?.hostelRoom || 'Apartment 204 - Block A'}</span>
             </div>
             <div className="rounded-xl bg-muted/40 p-2.5">
-              <span className="text-[10px] text-muted-foreground uppercase font-bold block">Enrolled Year</span>
-              <span className="font-semibold text-foreground">{myRecord?.yearOfStudy || '1st Year (2024-28)'}</span>
+              <span className="text-[10px] text-muted-foreground uppercase font-bold block">
+                {lang === 'hi' ? 'संबद्ध सत्र / वर्ष' : 'Membership / Enrolled Year'}
+              </span>
+              <span className="font-semibold text-foreground">{myRecord?.yearOfStudy || 'Active (2024-26)'}</span>
             </div>
             <div className="rounded-xl bg-muted/40 p-2.5 col-span-2 sm:col-span-1">
-              <span className="text-[10px] text-muted-foreground uppercase font-bold block">Campus Status</span>
+              <span className="text-[10px] text-muted-foreground uppercase font-bold block">
+                {lang === 'hi' ? 'भवन स्थिति' : 'Building Status'}
+              </span>
               <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" /> Active Enrolled
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                {lang === 'hi' ? 'अधिकृत अधिभोगी' : 'Authorized Occupant'}
               </span>
             </div>
           </div>
         </div>
 
-        {/* Student Quick Safety Action Widget */}
+        {/* Resident Quick Safety Action Widget */}
         <div className="rounded-2xl border border-red-500/30 bg-gradient-to-br from-card via-card to-red-500/10 p-5 shadow-sm flex flex-col justify-between">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-red-600 dark:text-red-400 flex items-center gap-1.5">
                 <Siren className="h-4 w-4" />
-                Emergency Safety Hub
+                {t('dash.res.emergency_hub')}
               </span>
               <span className="text-[10px] font-bold bg-red-500/20 text-red-600 px-2 py-0.5 rounded-full">
-                Free Will SOS
+                {t('dash.res.free_will')}
               </span>
             </div>
             <p className="text-xs text-muted-foreground">
-              In danger or witnessing a crisis? Trigger your personal distress SOS anytime.
+              {lang === 'hi'
+                ? 'संकट या खतरे की स्थिति में? किसी भी समय अपना व्यक्तिगत संकट SOS अलर्ट भेजें।'
+                : 'In danger or witnessing a crisis? Trigger your personal distress SOS anytime.'}
             </p>
           </div>
 
@@ -447,43 +448,46 @@ function StudentDashboard() {
               href="#sos"
               onClick={(e) => {
                 e.preventDefault()
-                // Navigate to SOS tab via custom event or user interaction
                 window.location.hash = 'sos'
               }}
               className="w-full flex items-center justify-center gap-2 rounded-xl bg-red-600 hover:bg-red-700 text-white py-2.5 text-xs font-bold shadow-md transition-all active:scale-[0.98]"
             >
-              <Siren className="h-4 w-4" /> Go to Emergency SOS
+              <Siren className="h-4 w-4" /> {t('dash.res.goto_sos')}
             </a>
             <div className="flex items-center justify-between text-[11px] text-muted-foreground px-1">
-              <span>Security Helpline:</span>
+              <span>{lang === 'hi' ? 'सुरक्षा कंट्रोल रूम:' : 'Security Control Room:'}</span>
               <a href="tel:1800226787" className="font-bold text-foreground hover:underline">1800-226-787</a>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Student Complaints & Issues Tracker */}
+      {/* Resident Complaints & Issues Tracker */}
       <div className="rounded-2xl border bg-card p-5 shadow-sm space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-3">
           <div>
             <h3 className="text-sm font-bold flex items-center gap-2">
-              <Wrench className="h-4 w-4 text-emerald-500" /> My Registered Campus Complaints
+              <Wrench className="h-4 w-4 text-emerald-500" /> {t('dash.res.my_reports')}
             </h3>
             <p className="text-xs text-muted-foreground">
-              Real-time progress on hostel, classroom and campus issues you reported.
+              {lang === 'hi'
+                ? 'आपके द्वारा दर्ज की गई भवन व सुविधा संबंधी समस्याओं की वास्तविक प्रगति।'
+                : 'Real-time progress on unit, room and facility issues you reported.'}
             </p>
           </div>
           <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-bold text-muted-foreground">
-            {myReports.length} {myReports.length === 1 ? 'Report' : 'Reports'}
+            {myReports.length} {lang === 'hi' ? 'शिकायतें' : (myReports.length === 1 ? 'Report' : 'Reports')}
           </span>
         </div>
 
         {myReports.length === 0 ? (
           <div className="rounded-xl border border-dashed p-8 text-center space-y-2">
             <CheckCircle2 className="h-8 w-8 text-emerald-500 mx-auto" />
-            <p className="text-sm font-bold">No active issues reported</p>
+            <p className="text-sm font-bold">{lang === 'hi' ? 'कोई सक्रिय शिकायत नहीं' : 'No active issues reported'}</p>
             <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-              Everything in your hostel and classrooms is operating smoothly. If something breaks, report it via the Maintenance tab.
+              {lang === 'hi'
+                ? 'आपकी यूनिट व सभी सुविधाएं सामान्य रूप से काम कर रही हैं। यदि कोई खराबी हो तो रखरखाव टैब से रिपोर्ट करें।'
+                : 'Everything in your unit and facilities is operating smoothly. If something breaks, report it via the Maintenance tab.'}
             </p>
           </div>
         ) : (
@@ -499,9 +503,9 @@ function StudentDashboard() {
                 </div>
                 <p className="text-xs text-muted-foreground">{report.description}</p>
                 <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t text-[11px] text-muted-foreground">
-                  <span>Zone: <b>{report.zone}</b></span>
-                  <span>Category: <b>{report.category}</b></span>
-                  <span>Reported {relTime(report.createdAt)}</span>
+                  <span>{lang === 'hi' ? 'क्षेत्र:' : 'Zone:'} <b>{report.zone}</b></span>
+                  <span>{lang === 'hi' ? 'श्रेणी:' : 'Category:'} <b>{report.category}</b></span>
+                  <span>{relTime(report.createdAt)}</span>
                 </div>
               </div>
             ))}
@@ -509,31 +513,31 @@ function StudentDashboard() {
         )}
       </div>
 
-      {/* Campus Emergency Directory & Assembly Points */}
+      {/* Facility Emergency Directory & Assembly Points */}
       <div className="grid gap-4 md:grid-cols-2">
         <div className="rounded-2xl border bg-card p-5 shadow-sm space-y-3">
           <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-            <PhoneCall className="h-4 w-4 text-emerald-500" /> Quick Emergency Directory
+            <PhoneCall className="h-4 w-4 text-emerald-500" /> {t('dash.res.directory')}
           </h3>
           <div className="divide-y text-xs">
             <div className="py-2 flex items-center justify-between">
               <div>
-                <p className="font-bold">National Emergency Helpline</p>
-                <p className="text-[11px] text-muted-foreground">All-in-one Police, Fire &amp; Ambulance</p>
+                <p className="font-bold">{lang === 'hi' ? 'राष्ट्रीय आपातकालीन हेल्पलाइन' : 'National Emergency Helpline'}</p>
+                <p className="text-[11px] text-muted-foreground">{lang === 'hi' ? 'पुलिस, अग्निशमन व एम्बुलेंस (ऑल-इन-वन)' : 'All-in-one Police, Fire & Ambulance'}</p>
               </div>
               <a href="tel:112" className="px-2.5 py-1 rounded bg-emerald-500/15 text-emerald-600 font-bold">112</a>
             </div>
             <div className="py-2 flex items-center justify-between">
               <div>
-                <p className="font-bold">Campus Security Main Gate</p>
-                <p className="text-[11px] text-muted-foreground">Control Room 24x7</p>
+                <p className="font-bold">{lang === 'hi' ? 'भवन सुरक्षा मुख्य नियंत्रण कक्ष' : 'Building Security Command Desk'}</p>
+                <p className="text-[11px] text-muted-foreground">{lang === 'hi' ? '24x7 मुख्य द्वार कंट्रोल रूम' : 'Main Gate Control Room 24x7'}</p>
               </div>
               <a href="tel:1800226787" className="px-2.5 py-1 rounded bg-emerald-500/15 text-emerald-600 font-bold">1800-226-787</a>
             </div>
             <div className="py-2 flex items-center justify-between">
               <div>
-                <p className="font-bold">Medical Center &amp; Ambulance</p>
-                <p className="text-[11px] text-muted-foreground">On-Campus First Response</p>
+                <p className="font-bold">{lang === 'hi' ? 'चिकित्सा केंद्र व आपातकालीन एम्बुलेंस' : 'First Aid Medical & Ambulance'}</p>
+                <p className="text-[11px] text-muted-foreground">{lang === 'hi' ? 'परिसर प्राथमिक चिकित्सा रिस्पांस' : 'On-Premise First Response'}</p>
               </div>
               <a href="tel:102" className="px-2.5 py-1 rounded bg-emerald-500/15 text-emerald-600 font-bold">102</a>
             </div>
@@ -542,16 +546,16 @@ function StudentDashboard() {
 
         <div className="rounded-2xl border bg-card p-5 shadow-sm space-y-3">
           <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-            <MapPin className="h-4 w-4 text-emerald-500" /> Designated Assembly Points
+            <MapPin className="h-4 w-4 text-emerald-500" /> {t('dash.res.assembly')}
           </h3>
           <div className="space-y-2.5 text-xs">
             <div className="rounded-xl border p-2.5 bg-background">
-              <p className="font-bold">Assembly Point 1 — Central Sports Ground</p>
-              <p className="text-[11px] text-muted-foreground">For Academic Blocks A &amp; B and Library evacuation.</p>
+              <p className="font-bold">{lang === 'hi' ? 'सुरक्षा निकासी स्थल 1 — केंद्रीय खुला प्रांगण' : 'Assembly Point 1 — Central Open Courtyard'}</p>
+              <p className="text-[11px] text-muted-foreground">{lang === 'hi' ? 'ब्लॉक A व B निवासियों, आगंतुकों व सामान्य निकासी हेतु।' : 'For Block A & B occupants, visitors and general facility evacuation.'}</p>
             </div>
             <div className="rounded-xl border p-2.5 bg-background">
-              <p className="font-bold">Assembly Point 2 — Hostel Quadrangle Lawns</p>
-              <p className="text-[11px] text-muted-foreground">For all residential hostel blocks &amp; cafeteria.</p>
+              <p className="font-bold">{lang === 'hi' ? 'सुरक्षा निकासी स्थल 2 — मुख्य द्वार परिधि लॉन' : 'Assembly Point 2 — Perimeter Lawns & Gate 1'}</p>
+              <p className="text-[11px] text-muted-foreground">{lang === 'hi' ? 'सभी आवासीय विंग, व्यावसायिक हॉल व कैफेटेरिया हेतु।' : 'For all residential wings, commercial areas and service floors.'}</p>
             </div>
           </div>
         </div>
@@ -564,6 +568,7 @@ function StudentDashboard() {
 // 3. TECHNICIAN / MAINTENANCE DASHBOARD: Task Queue, AI Tamper Proofs & Categories
 // ─────────────────────────────────────────────────────────────────────────────
 function TechnicianDashboard() {
+  const { lang, t } = useI18n()
   const { data: repData } = useQuery({
     queryKey: ['maintenance'],
     queryFn: () => api<{ reports: MaintenanceReport[] }>('/api/maintenance'),
@@ -579,10 +584,10 @@ function TechnicianDashboard() {
     <div className="space-y-5">
       {/* Technician KPI Ribbons */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <StatCard label="Active Work Orders" value={pendingProof.length} icon={<HardHat className="h-4 w-4" />} tone={pendingProof.length > 0 ? 'warning' : 'success'} sub="assigned for repair" />
-        <StatCard label="In AI Tamper Check" value={inAiVerification.length} icon={<Sparkles className="h-4 w-4" />} tone="info" sub="proof submitted" />
-        <StatCard label="Resolved Repairs" value={resolved.length} icon={<CheckCircle2 className="h-4 w-4" />} tone="success" sub="completed" />
-        <StatCard label="Total Tracked" value={reports.length} icon={<Wrench className="h-4 w-4" />} tone="neutral" sub="across all campus" />
+        <StatCard label={t('dash.tech.work_orders')} value={pendingProof.length} icon={<HardHat className="h-4 w-4" />} tone={pendingProof.length > 0 ? 'warning' : 'success'} sub={lang === 'hi' ? 'मरम्मत हेतु आवंटित' : 'assigned for repair'} />
+        <StatCard label={t('dash.tech.ai_check')} value={inAiVerification.length} icon={<Sparkles className="h-4 w-4" />} tone="info" sub={lang === 'hi' ? 'प्रमाण प्रस्तुत' : 'proof submitted'} />
+        <StatCard label={t('dash.tech.resolved')} value={resolved.length} icon={<CheckCircle2 className="h-4 w-4" />} tone="success" sub={lang === 'hi' ? 'पूर्ण' : 'completed'} />
+        <StatCard label={t('dash.tech.total')} value={reports.length} icon={<Wrench className="h-4 w-4" />} tone="neutral" sub={lang === 'hi' ? 'समस्त भवन' : 'across all facility'} />
       </div>
 
       {/* Active Work Orders Table */}
@@ -590,20 +595,22 @@ function TechnicianDashboard() {
         <div className="flex items-center justify-between border-b pb-3">
           <div>
             <h3 className="text-sm font-bold flex items-center gap-2">
-              <HardHat className="h-4 w-4 text-emerald-500" /> Field Work Orders Requiring Action
+              <HardHat className="h-4 w-4 text-emerald-500" /> {t('dash.tech.queue_title')}
             </h3>
             <p className="text-xs text-muted-foreground">
-              Review assigned repairs and upload after-work camera photos for AI inspection.
+              {lang === 'hi'
+                ? 'आवंटित मरम्मत कार्यों की समीक्षा करें और AI जांच हेतु कार्य उपरांत फोटो/वीडियो व भुगतान अपलोड करें।'
+                : 'Review assigned repairs and upload after-work camera photos/videos & payment details for AI verification.'}
             </p>
           </div>
           <span className="rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 px-2.5 py-0.5 text-xs font-bold">
-            {pendingProof.length} Active
+            {pendingProof.length} {lang === 'hi' ? 'सक्रिय' : 'Active'}
           </span>
         </div>
 
         {pendingProof.length === 0 ? (
           <div className="p-8 text-center text-xs text-muted-foreground">
-            No pending repairs awaiting work. All systems nominal.
+            {lang === 'hi' ? 'कोई लंबित मरम्मत कार्य नहीं है। सभी प्रणालियां सामान्य हैं।' : 'No pending repairs awaiting work. All systems nominal.'}
           </div>
         ) : (
           <div className="space-y-3">
@@ -613,14 +620,14 @@ function TechnicianDashboard() {
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-mono font-bold text-emerald-600">{item.code}</span>
                     <span className="text-sm font-bold text-foreground">{item.title}</span>
-                    <span className="text-xs text-muted-foreground">· Category: {item.category}</span>
+                    <span className="text-xs text-muted-foreground">· {lang === 'hi' ? 'श्रेणी' : 'Category'}: {item.category}</span>
                   </div>
                   <Pill label={item.priority} className={SEVERITY_STYLES[item.priority]} />
                 </div>
                 <p className="text-xs text-muted-foreground">{item.description}</p>
                 <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t text-xs">
-                  <span className="text-muted-foreground">Location: <b>{item.zone}</b></span>
-                  <span className="text-muted-foreground">Reported by: <b>{item.reportedBy}</b></span>
+                  <span className="text-muted-foreground">{lang === 'hi' ? 'स्थान:' : 'Location:'} <b>{item.zone}</b></span>
+                  <span className="text-muted-foreground">{lang === 'hi' ? 'शिकायतकर्ता:' : 'Reported by:'} <b>{item.reportedBy}</b></span>
                 </div>
               </div>
             ))}
@@ -635,6 +642,7 @@ function TechnicianDashboard() {
 // 4. SECURITY DASHBOARD: Gate Access, Visitors & Active SOS Beacons
 // ─────────────────────────────────────────────────────────────────────────────
 function SecurityDashboard() {
+  const { lang, t } = useI18n()
   const { data: dash } = useQuery({
     queryKey: ['dashboard'],
     queryFn: () => api<DashboardData>('/api/dashboard'),
@@ -649,10 +657,10 @@ function SecurityDashboard() {
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <StatCard label="Visitors Inside" value={inside.length} icon={<Users className="h-4 w-4" />} tone="info" sub="checked in right now" />
-        <StatCard label="Active SOS Signals" value={dash?.stats.activeSos ?? 0} icon={<Siren className="h-4 w-4" />} tone={dash && dash.stats.activeSos > 0 ? 'danger' : 'success'} sub="security beacons" />
-        <StatCard label="Security Incidents (24h)" value={dash?.stats.suspiciousToday ?? 0} icon={<ShieldAlert className="h-4 w-4" />} tone={dash && dash.stats.suspiciousToday > 0 ? 'warning' : 'success'} sub="access anomalies" />
-        <StatCard label="Total Access Swipes" value={dash?.stats.accessEventsToday ?? 0} icon={<DoorOpen className="h-4 w-4" />} tone="neutral" sub="monitored gates" />
+        <StatCard label={t('dash.sec.visitors_inside')} value={inside.length} icon={<Users className="h-4 w-4" />} tone="info" sub={lang === 'hi' ? 'वर्तमान में अंदर' : 'checked in right now'} />
+        <StatCard label={t('dash.sec.sos_signals')} value={dash?.stats.activeSos ?? 0} icon={<Siren className="h-4 w-4" />} tone={dash && dash.stats.activeSos > 0 ? 'danger' : 'success'} sub={lang === 'hi' ? 'सुरक्षा बीकन' : 'security beacons'} />
+        <StatCard label={t('dash.sec.incidents')} value={dash?.stats.suspiciousToday ?? 0} icon={<ShieldAlert className="h-4 w-4" />} tone={dash && dash.stats.suspiciousToday > 0 ? 'warning' : 'success'} sub={lang === 'hi' ? 'प्रवेश विसंगतियां' : 'access anomalies'} />
+        <StatCard label={t('dash.sec.swipes')} value={dash?.stats.accessEventsToday ?? 0} icon={<DoorOpen className="h-4 w-4" />} tone="neutral" sub={lang === 'hi' ? 'निगरानी किए गए द्वार' : 'monitored gates'} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -660,19 +668,21 @@ function SecurityDashboard() {
         <div className="rounded-2xl border bg-card p-5 shadow-sm space-y-3">
           <div className="flex items-center justify-between border-b pb-2">
             <h3 className="text-sm font-bold flex items-center gap-2">
-              <Users className="h-4 w-4 text-emerald-500" /> Active Campus Visitors
+              <Users className="h-4 w-4 text-emerald-500" /> {lang === 'hi' ? 'सक्रिय भवन आगंतुक' : 'Active Facility Visitors'}
             </h3>
-            <span className="text-xs text-muted-foreground">{inside.length} inside</span>
+            <span className="text-xs text-muted-foreground">{inside.length} {lang === 'hi' ? 'अंदर' : 'inside'}</span>
           </div>
           {inside.length === 0 ? (
-            <p className="text-xs text-muted-foreground py-6 text-center">No external visitors currently on premises.</p>
+            <p className="text-xs text-muted-foreground py-6 text-center">
+              {lang === 'hi' ? 'वर्तमान में परिसर में कोई बाहरी आगंतुक नहीं है।' : 'No external visitors currently on premises.'}
+            </p>
           ) : (
             <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
               {inside.map((v) => (
                 <div key={v.id} className="rounded-xl border p-2.5 flex items-center justify-between text-xs bg-muted/20">
                   <div>
                     <p className="font-bold">{v.visitorName}</p>
-                    <p className="text-[11px] text-muted-foreground">Host: {v.hostName} · Pass: {v.passNo}</p>
+                    <p className="text-[11px] text-muted-foreground">{lang === 'hi' ? 'मेजबान:' : 'Host:'} {v.hostName} · {lang === 'hi' ? 'पास:' : 'Pass:'} {v.passNo}</p>
                   </div>
                   <Pill label="INSIDE" className={STATUS_STYLES.INSIDE} />
                 </div>
@@ -684,16 +694,20 @@ function SecurityDashboard() {
         {/* Security Quick Actions */}
         <div className="rounded-2xl border bg-card p-5 shadow-sm space-y-3">
           <h3 className="text-sm font-bold flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-emerald-500" /> Perimeter &amp; Gate Protocols
+            <ShieldCheck className="h-4 w-4 text-emerald-500" /> {t('dash.sec.protocols')}
           </h3>
           <div className="space-y-2 text-xs">
             <div className="p-3 rounded-xl border bg-muted/30">
-              <p className="font-bold">Rapid Visitor Check-In</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">Use the Security tab for 1-click automatic visitor entry filling.</p>
+              <p className="font-bold">{lang === 'hi' ? 'त्वरित आगंतुक चेक-इन' : 'Rapid Visitor Check-In'}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                {lang === 'hi' ? '1-क्लिक स्वचालित प्री-फिल प्रविष्टि हेतु सुरक्षा टैब का उपयोग करें।' : 'Use the Security tab for 1-click automatic visitor entry filling.'}
+              </p>
             </div>
             <div className="p-3 rounded-xl border bg-muted/30">
-              <p className="font-bold">SOS Distress Response</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">Live GPS coordinates will route emergency officers directly to distress callers.</p>
+              <p className="font-bold">{lang === 'hi' ? 'SOS संकट त्वरित प्रतिक्रिया' : 'SOS Distress Response'}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                {lang === 'hi' ? 'लाइव जीपीएस स्थिति आपातकालीन अधिकारियों को सीधे संकट स्थल तक पहुंचाएगी।' : 'Live GPS coordinates will route emergency officers directly to distress callers.'}
+              </p>
             </div>
           </div>
         </div>
@@ -714,7 +728,7 @@ export function DashboardView() {
   if (user.role === 'ADMIN') {
     return <AdminDashboard />
   }
-  if (user.role === 'STUDENT') {
+  if (user.role === 'STUDENT' || user.role === 'USER') {
     return <StudentDashboard />
   }
   if (user.role === 'MAINTENANCE') {

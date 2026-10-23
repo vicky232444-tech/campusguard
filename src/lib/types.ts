@@ -350,7 +350,7 @@ export const BUILDING_ZONES_CONFIG: Record<string, { label: string; places: stri
   },
   'Academic Block A': {
     label: 'Academic Block A',
-    places: ['Main Auditorium', 'Classroom 101', 'Classroom 102', 'Faculty Lounge'],
+    places: ['Main Auditorium', 'Classroom 101', 'Classroom 102', 'Conference Hall'],
   },
   'Hostel Block A': {
     label: 'Hostel Block A',

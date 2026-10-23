@@ -65,7 +65,7 @@ export async function analyzeProofAuthenticity(
             {
               type: 'text',
               text:
-                `A maintenance staff member uploaded this photo as PROOF of completed repair work.\n` +
+                `A maintenance technician uploaded this photo as PROOF of completed repair work.\n` +
                 `Repair report: ${ctx.code} — "${ctx.title}" at ${ctx.zone}${ctx.location ? ` (${ctx.location})` : ''}.\n\n` +
                 `Audit the image for digital manipulation / morphing, checking:\n` +
                 `1. AI-generation artifacts (over-smooth textures, warped text, impossible geometry)\n` +

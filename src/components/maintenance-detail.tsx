@@ -741,7 +741,7 @@ function ProofPicker({
             className="flex h-24 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-emerald-500/40 bg-emerald-500/5 text-xs font-semibold text-emerald-700 dark:text-emerald-400 transition-colors hover:bg-emerald-500/10"
           >
             <Camera className="h-4 w-4" />
-            Live Camera
+            Take Photo
           </button>
           <button
             type="button"

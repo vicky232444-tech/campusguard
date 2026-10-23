@@ -286,7 +286,7 @@ export function CameraCaptureModal({ open, onClose, onCapture, title }: CameraCa
               {cameraActive && (
                 <div className="absolute inset-4 pointer-events-none border-2 border-white/40 rounded-lg flex flex-col justify-between p-2">
                   <span className="text-[10px] text-white/80 bg-black/40 px-2 py-0.5 rounded self-start font-mono">
-                    LIVE VIEWFINDER · 1080p
+                    CAMERA VIEWFINDER · 1080p
                   </span>
                   <span className="text-[10px] text-white/80 bg-black/40 px-2 py-0.5 rounded self-center font-mono">
                     Center object inside reticle

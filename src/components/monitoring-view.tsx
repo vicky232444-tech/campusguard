@@ -9,6 +9,7 @@ import { useUserStore } from '@/lib/user-store'
 import { can } from '@/lib/permissions'
 import type { Sensor, SensorReading, BuildingConfig } from '@/lib/types'
 import { Pill, SEVERITY_STYLES, SimBadge, relTime, timeStr } from '@/components/shared'
+import { useI18n } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
@@ -59,6 +60,7 @@ export function MonitoringView() {
   const liveReadings = useLiveStore((s) => s.readings)
   const user = useUserStore((s) => s.user)
   const queryClient = useQueryClient()
+  const { lang } = useI18n()
   const [detailId, setDetailId] = useState<string | null>(null)
   const [mapConfigOpen, setMapConfigOpen] = useState(false)
 
@@ -85,9 +87,13 @@ export function MonitoringView() {
     return (
       <div className="rounded-2xl border border-dashed p-12 text-center space-y-3 bg-muted/10">
         <ShieldAlert className="h-10 w-10 text-amber-500 mx-auto" />
-        <h2 className="text-lg font-bold text-foreground">Administrative Monitor Access Restricted</h2>
+        <h2 className="text-lg font-bold text-foreground">
+          {lang === 'hi' ? 'केवल व्यवस्थापक पहुंच — भवन मॉनिटर' : 'Administrative Monitor Access Restricted'}
+        </h2>
         <p className="text-sm text-muted-foreground max-w-md mx-auto">
-          Building Monitor, environmental telemetry and blueprint configuration are strictly available for Administrative users only.
+          {lang === 'hi'
+            ? 'भवन निगरानी, पर्यावरण टेलीमेट्री व मास्टर ब्लूप्रिंट केवल प्रशासनिक उपयोगकर्ताओं के लिए उपलब्ध है।'
+            : 'Building Monitor, environmental telemetry and blueprint configuration are strictly available for Administrative users only.'}
         </p>
       </div>
     )
@@ -130,7 +136,7 @@ export function MonitoringView() {
             onClick={() => setMapConfigOpen(true)}
             className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-1.5 shadow"
           >
-            <Upload className="h-3.5 w-3.5" /> Upload Blueprint &amp; Location
+            <Upload className="h-3.5 w-3.5" /> {lang === 'hi' ? 'मास्टर ब्लूप्रिंट व स्थान अपलोड करें' : 'Upload Blueprint & Location'}
           </Button>
         </div>
 

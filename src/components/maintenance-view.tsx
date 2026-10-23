@@ -146,26 +146,26 @@ export function MaintenanceView() {
           {lang === 'hi' ? 'शिकायतें व मरम्मत कार्य' : 'Building Repairs & Complaints'}
         </button>
 
-        <button
-          onClick={() => setActiveTab('students')}
-          className={cn(
-            'flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all',
-            activeTab === 'students'
-              ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30'
-              : 'text-muted-foreground hover:bg-muted'
-          )}
-        >
-          <UserCheck className="h-4 w-4" />
-          {lang === 'hi' ? 'पहचान / छात्र सत्यापन' : 'Identity / Student Verification'}
-          {studentRecords.length > 0 && (
-            <span className="rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 px-1.5 py-0.2 text-[10px] font-mono">
-              {studentRecords.length}
-            </span>
-          )}
-        </button>
-
         {isAdmin && (
           <>
+            <button
+              onClick={() => setActiveTab('students')}
+              className={cn(
+                'flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all',
+                activeTab === 'students'
+                  ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30'
+                  : 'text-muted-foreground hover:bg-muted'
+              )}
+            >
+              <UserCheck className="h-4 w-4" />
+              {lang === 'hi' ? 'पहचान / छात्र सत्यापन (एडमिन)' : 'Identity & Student Verification (Admin)'}
+              {studentRecords.length > 0 && (
+                <span className="rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 px-1.5 py-0.2 text-[10px] font-mono">
+                  {studentRecords.length}
+                </span>
+              )}
+            </button>
+
             <button
               onClick={() => setActiveTab('ratings')}
               className={cn(
@@ -176,7 +176,7 @@ export function MaintenanceView() {
               )}
             >
               <Star className="h-4 w-4 text-amber-500" />
-              <span>Worker Ratings Review</span>
+              <span>{lang === 'hi' ? 'तकनीशियन समीक्षा अनुमोदन' : 'Worker Ratings Review'}</span>
               {pendingRatingsCount > 0 && (
                 <span className="rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-400 px-1.5 py-0.2 text-[10px] font-mono">
                   {pendingRatingsCount}
@@ -194,7 +194,7 @@ export function MaintenanceView() {
               )}
             >
               <AlertOctagon className="h-4 w-4 text-red-500" />
-              <span>Suspension Appeals</span>
+              <span>{lang === 'hi' ? 'निलंबन अपील समीक्षा' : 'Suspension Appeals'}</span>
               {pendingAppealsCount > 0 && (
                 <span className="rounded-full bg-red-500/20 text-red-700 dark:text-red-400 px-1.5 py-0.2 text-[10px] font-mono">
                   {pendingAppealsCount}
@@ -205,11 +205,11 @@ export function MaintenanceView() {
         )}
       </div>
 
-      {activeTab === 'students' ? (
+      {activeTab === 'students' && isAdmin ? (
         <StudentVerificationSection />
-      ) : activeTab === 'ratings' ? (
+      ) : activeTab === 'ratings' && isAdmin ? (
         <AdminRatingsSection />
-      ) : activeTab === 'appeals' ? (
+      ) : activeTab === 'appeals' && isAdmin ? (
         <AdminAppealsSection />
       ) : (
         <>
@@ -227,8 +227,10 @@ export function MaintenanceView() {
               </p>
             </div>
 
-            {/* Complaint Register Modal */}
-            <ReportDialog onDone={() => queryClient.invalidateQueries({ queryKey: ['maintenance'] })} />
+            {/* Complaint Register Modal - Available for Residents, Students & Admins (NOT Maintenance Team) */}
+            {user?.role !== 'MAINTENANCE' && (
+              <ReportDialog onDone={() => queryClient.invalidateQueries({ queryKey: ['maintenance'] })} />
+            )}
           </div>
 
           {/* 3-Step Verification Pipeline */}

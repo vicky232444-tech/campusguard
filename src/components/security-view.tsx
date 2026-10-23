@@ -27,6 +27,7 @@ const VISITOR_TEMPLATES = [
 ]
 
 function SecurityStats({ events, visitors }: { events: SecurityEvent[]; visitors: VisitorLog[] }) {
+  const { lang } = useI18n()
   const dayAgo = Date.now() - 24 * 3600 * 1000
   const today = events.filter((e) => new Date(e.createdAt).getTime() >= dayAgo)
   const denied = today.filter((e) => e.eventType === 'ACCESS_DENIED').length
@@ -34,10 +35,10 @@ function SecurityStats({ events, visitors }: { events: SecurityEvent[]; visitors
   const inside = visitors.filter((v) => v.status === 'INSIDE').length
 
   const cards = [
-    { label: 'Access events (24h)', value: today.length, icon: <DoorClosed className="h-4 w-4" />, tone: 'text-foreground' },
-    { label: 'Denied entries (24h)', value: denied, icon: <LogOut className="h-4 w-4" />, tone: denied > 0 ? 'text-red-500' : 'text-emerald-500' },
-    { label: 'Suspicious (24h)', value: suspicious, icon: <ShieldAlert className="h-4 w-4" />, tone: suspicious > 0 ? 'text-amber-500' : 'text-emerald-500' },
-    { label: 'Visitors inside', value: inside, icon: <Users className="h-4 w-4" />, tone: 'text-teal-500' },
+    { label: lang === 'hi' ? 'प्रवेश घटनाएं (24 घंटे)' : 'Access events (24h)', value: today.length, icon: <DoorClosed className="h-4 w-4" />, tone: 'text-foreground' },
+    { label: lang === 'hi' ? 'अस्वीकृत प्रवेश (24 घंटे)' : 'Denied entries (24h)', value: denied, icon: <LogOut className="h-4 w-4" />, tone: denied > 0 ? 'text-red-500' : 'text-emerald-500' },
+    { label: lang === 'hi' ? 'संदिग्ध घटनाएं (24 घंटे)' : 'Suspicious (24h)', value: suspicious, icon: <ShieldAlert className="h-4 w-4" />, tone: suspicious > 0 ? 'text-amber-500' : 'text-emerald-500' },
+    { label: lang === 'hi' ? 'वर्तमान में अंदर आगंतुक' : 'Visitors inside', value: inside, icon: <Users className="h-4 w-4" />, tone: 'text-teal-500' },
   ]
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

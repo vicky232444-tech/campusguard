@@ -27,7 +27,7 @@ export function verifyPassword(plain: string, stored: string): boolean {
 }
 
 /** Demo-grade session-token signing secret (prototype — production would use env/secret manager). */
-const AUTH_SECRET = process.env.AUTH_SECRET ?? 'campusguard-techtix26-demo-secret'
+const AUTH_SECRET = process.env.AUTH_SECRET ?? 'omniguard-secure-auth-secret'
 
 /** Sign a user id into an unforgeable-enough session token: `<id>.<hmac>`. */
 export function signToken(userId: string): string {
