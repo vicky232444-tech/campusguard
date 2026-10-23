@@ -72,10 +72,12 @@ export function MonitoringView() {
       <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-card p-3">
         <Wifi className="h-4 w-4 text-emerald-500" />
         <p className="text-xs text-muted-foreground flex-1 min-w-0">
-          Sensor readings stream every 5 seconds from the <strong className="text-foreground/80">simulated</strong> ESP32-class
-          sensor network. Values outside configured limits raise alerts to authorised staff automatically.
+          Sensor telemetry active across ESP32-class sensor network. Values outside configured safe limits raise alerts to authorized responders automatically.
         </p>
-        <SimBadge />
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          Grid Armed
+        </span>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

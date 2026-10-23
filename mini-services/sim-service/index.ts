@@ -40,26 +40,9 @@ type SimState = {
   wasAnomaly: boolean
 }
 
-// ─── Socket.io hub ────────────────────────────────────────────────────────────
+// ─── Internal HTTP request handler: Next.js forwards user actions for live push ─────
 
-const httpServer = createServer()
-const io = new Server(httpServer, {
-  // DO NOT change the path, it is used by Caddy to forward the request to the correct port
-  path: '/',
-  cors: { origin: '*', methods: ['GET', 'POST'] },
-  pingTimeout: 60000,
-  pingInterval: 25000,
-})
-
-io.on('connection', (socket) => {
-  console.log(`[sim] client connected: ${socket.id}`)
-  socket.on('disconnect', () => console.log(`[sim] client disconnected: ${socket.id}`))
-  socket.on('error', (e) => console.error('[sim] socket error', e))
-})
-
-// ─── Internal HTTP endpoint: Next.js forwards user actions for live push ─────
-
-const internalServer = createServer((req: IncomingMessage, res: ServerResponse) => {
+function handleInternalHttp(req: IncomingMessage, res: ServerResponse) {
   if (req.method === 'POST' && req.url === '/internal/emit') {
     let body = ''
     req.on('data', (c: Buffer) => (body += c))
@@ -85,7 +68,26 @@ const internalServer = createServer((req: IncomingMessage, res: ServerResponse) 
     return
   }
   res.writeHead(404).end()
+}
+
+// ─── Socket.io hub ────────────────────────────────────────────────────────────
+
+const httpServer = createServer(handleInternalHttp)
+const io = new Server(httpServer, {
+  // DO NOT change the path, it is used by Caddy to forward the request to the correct port
+  path: '/',
+  cors: { origin: '*', methods: ['GET', 'POST'] },
+  pingTimeout: 60000,
+  pingInterval: 25000,
 })
+
+io.on('connection', (socket) => {
+  console.log(`[sim] client connected: ${socket.id}`)
+  socket.on('disconnect', () => console.log(`[sim] client disconnected: ${socket.id}`))
+  socket.on('error', (e) => console.error('[sim] socket error', e))
+})
+
+const internalServer = createServer(handleInternalHttp)
 
 internalServer.listen(3103, () => console.log('[sim] internal HTTP hub on :3103'))
 

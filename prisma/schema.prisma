@@ -17,10 +17,13 @@ model User {
   password    String // scrypt$<salt>$<hash> — individual credentials per user
   role        String // STUDENT | STAFF | SECURITY | MAINTENANCE | ADMIN
   dept        String?
+  rollNumber  String?
+  isVerified  Boolean  @default(false)
   color       String   @default("#10b981")
   createdAt   DateTime @default(now())
   reports     MaintenanceReport[] @relation("Reporter")
   assigned    MaintenanceReport[] @relation("Assignee")
+  studentVerifications StudentVerification[]
 }
 
 // ─── Module 1: Building Condition Monitoring ─────────────────────────────────
@@ -118,6 +121,9 @@ model SosAlert {
   latitude       Float?
   longitude      Float?
   locationText   String? // zone selected manually
+  isMassBroadcast Boolean  @default(false)
+  triggerSource  String    @default("MANUAL_USER") // MANUAL_ADMIN | MANUAL_USER | APPROVED_REQUEST | AUTO_DISASTER
+  requestId      String?
   status         String    @default("ACTIVE") // ACTIVE | ACKNOWLEDGED | RESOLVED
   acknowledgedBy String?
   acknowledgedAt DateTime?
@@ -126,6 +132,50 @@ model SosAlert {
   createdAt      DateTime  @default(now())
 
   @@index([status, createdAt])
+}
+
+model SosBroadcastRequest {
+  id              String    @id @default(cuid())
+  requestedById   String
+  requestedByName String
+  requestedRole   String
+  emergencyType   String    // MEDICAL | FIRE | SECURITY_THREAT | ACCIDENT | OTHER
+  zone            String?
+  reason          String
+  targetAudience  String    @default("ALL_CAMPUS_DEVICES")
+  status          String    @default("PENDING") // PENDING | APPROVED | REJECTED
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  rejectionReason String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([status, createdAt])
+}
+
+model StudentVerification {
+  id                 String    @id @default(cuid())
+  userId             String?
+  user               User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  studentName        String
+  rollNumber         String    @unique
+  department         String
+  yearOfStudy        String    @default("3rd Year")
+  contactPhone       String?
+  hostelRoom         String?
+  idCardPhoto        String?
+  facePhoto          String?
+  status             String    @default("PENDING") // PENDING | VERIFIED | REJECTED
+  aiConfidenceScore  Float?
+  aiVerdict          String?   // AUTHENTICATED | SUSPICIOUS | TAMPER_DETECTED
+  aiChecks           String?   // JSON string of AI inspection checks
+  verifiedBy         String?
+  verifiedAt         DateTime?
+  remarks            String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([status, rollNumber])
 }
 
 // ─── Module 4: Maintenance Management ────────────────────────────────────────

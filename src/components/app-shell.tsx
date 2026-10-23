@@ -71,7 +71,7 @@ export function AppShell() {
 
   const NAV: { id: ViewId; labelKey: string; icon: React.ReactNode; roles?: Role[]; hintKey: string }[] = [
     { id: 'dashboard', labelKey: 'nav.dashboard', icon: <LayoutDashboard className="h-4 w-4" />, hintKey: 'nav.dashboard.hint' },
-    { id: 'monitoring', labelKey: 'nav.monitoring', icon: <Gauge className="h-4 w-4" />, hintKey: 'nav.monitoring.hint' },
+    { id: 'monitoring', labelKey: 'nav.monitoring', icon: <Gauge className="h-4 w-4" />, roles: ['STAFF', 'MAINTENANCE', 'ADMIN'], hintKey: 'nav.monitoring.hint' },
     { id: 'security', labelKey: 'nav.security', icon: <ShieldCheck className="h-4 w-4" />, roles: ['STAFF', 'SECURITY', 'ADMIN'], hintKey: 'nav.security.hint' },
     { id: 'sos', labelKey: 'nav.sos', icon: <Siren className="h-4 w-4" />, hintKey: 'nav.sos.hint' },
     { id: 'maintenance', labelKey: 'nav.maintenance', icon: <Wrench className="h-4 w-4" />, hintKey: 'nav.maintenance.hint' },

@@ -6,6 +6,8 @@ export type SessionUser = {
   email: string
   role: Role
   dept: string | null
+  rollNumber?: string | null
+  isVerified?: boolean
   color: string
 }
 
@@ -87,12 +89,54 @@ export type SosAlert = {
   latitude: number | null
   longitude: number | null
   locationText: string | null
+  isMassBroadcast?: boolean
+  triggerSource?: 'MANUAL_ADMIN' | 'MANUAL_USER' | 'APPROVED_REQUEST' | 'AUTO_DISASTER'
+  requestId?: string | null
   status: 'ACTIVE' | 'ACKNOWLEDGED' | 'RESOLVED'
   acknowledgedBy: string | null
   acknowledgedAt: string | null
   resolvedBy: string | null
   resolvedAt: string | null
   createdAt: string
+}
+
+export type SosBroadcastRequest = {
+  id: string
+  requestedById: string
+  requestedByName: string
+  requestedRole: string
+  emergencyType: string
+  zone: string | null
+  reason: string
+  targetAudience: string
+  status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  reviewedBy: string | null
+  reviewedAt: string | null
+  rejectionReason: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export type StudentVerification = {
+  id: string
+  userId: string | null
+  studentName: string
+  rollNumber: string
+  department: string
+  yearOfStudy: string
+  contactPhone: string | null
+  hostelRoom: string | null
+  idCardPhoto: string | null
+  facePhoto: string | null
+  status: 'PENDING' | 'VERIFIED' | 'REJECTED'
+  aiConfidenceScore: number | null
+  aiVerdict: string | null
+  aiChecks: string | null
+  verifiedBy: string | null
+  verifiedAt: string | null
+  remarks: string | null
+  createdAt: string
+  updatedAt: string
 }
 
 export type ReportUpdate = {

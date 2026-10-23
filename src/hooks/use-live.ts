@@ -5,7 +5,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { getSocket } from '@/lib/socket'
 import { useLiveStore } from '@/lib/live-store'
-import { beep } from '@/lib/beep'
+import { beep, playEmergencySiren30Sec } from '@/lib/beep'
 import type { Alert, LiveTick, SecurityEvent, SosAlert } from '@/lib/types'
 
 /**
@@ -66,21 +66,34 @@ export function useLiveEvents() {
       }
     })
 
-    socket.on('sos:new', (payload: { sos: SosAlert }) => {
+    socket.on('sos:new', (payload: { sos: SosAlert; alert?: Alert; isMassBroadcast?: boolean }) => {
       queryClient.invalidateQueries({ queryKey: ['sos'] })
+      queryClient.invalidateQueries({ queryKey: ['sos-requests'] })
       queryClient.invalidateQueries({ queryKey: ['alerts'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
       const { soundEnabled, flashCritical } = useLiveStore.getState()
       flashCritical()
-      if (soundEnabled) beep('critical')
-      toast.error(`🚨 SOS — ${payload.sos.emergencyType.replaceAll('_', ' ')}`, {
-        description: `${payload.sos.triggeredBy} (${payload.sos.role})${payload.sos.locationText ? ` · ${payload.sos.locationText}` : ''}`,
-        duration: 12000,
-      })
+
+      if (payload.isMassBroadcast) {
+        // Broadcast to ALL devices: trigger continuous 30-second siren!
+        playEmergencySiren30Sec()
+        toast.error(`🚨 CAMPUS-WIDE EMERGENCY EVACUATION`, {
+          description: `Administrator authorized broadcast: ${payload.sos.message || payload.sos.emergencyType} (${payload.sos.locationText || 'All Zones'})`,
+          duration: 30000,
+        })
+      } else {
+        if (soundEnabled) beep('critical')
+        toast.error(`🚨 Personal SOS — ${payload.sos.emergencyType.replaceAll('_', ' ')}`, {
+          description: `${payload.sos.triggeredBy} (${payload.sos.role})${payload.sos.locationText ? ` · ${payload.sos.locationText}` : ''}`,
+          duration: 12000,
+        })
+      }
     })
 
     socket.on('sos:update', () => {
       queryClient.invalidateQueries({ queryKey: ['sos'] })
+      queryClient.invalidateQueries({ queryKey: ['sos-requests'] })
+      queryClient.invalidateQueries({ queryKey: ['alerts'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
     })
 

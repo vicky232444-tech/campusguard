@@ -55,6 +55,11 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     // SOS
     'sos.title': 'Emergency SOS Trigger',
     'sos.subtitle': 'Sends high-priority distress alerts with continuous audio alarm',
+    'sos.access_control': 'SOS Access & Permission Control',
+    'sos.admin_mass_title': 'Campus-Wide Mass Evacuation Broadcast (Admin)',
+    'sos.personal_distress_title': 'Personal Emergency Distress SOS (Free Will)',
+    'sos.request_broadcast_title': 'Request Campus-Wide All-Devices Broadcast',
+    'sos.pending_requests': 'Pending SOS Broadcast Requests',
     'sos.hold_btn': 'HOLD FOR SOS',
     'sos.holding': 'KEEP HOLDING…',
     'sos.voice_trigger': 'Voice SOS Activation',
@@ -80,6 +85,9 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     'maint.camera_capture': 'Take Photo with Camera',
     'maint.photo_validation': 'Photo Verified (Good clarity & resolution)',
     'maint.submit_report': 'Submit Complaint',
+    'maint.student_verification': 'Student Records & AI Verification',
+    'maint.tab_repairs': 'Campus Repairs & Complaints',
+    'maint.tab_students': 'Student Verification Records',
 
     // Security & Visitors
     'sec.visitor_checkin': 'Visitor Check-in',
@@ -129,6 +137,11 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     // SOS
     'sos.title': 'आपातकालीन SOS अलर्ट',
     'sos.subtitle': 'तत्काल सुरक्षा दल को सतर्क करें और 30 सेकंड सायरन बजाएं',
+    'sos.access_control': 'SOS कमान व अनुमति नियंत्रण',
+    'sos.admin_mass_title': 'परिसर-व्यापी सामूहिक निकासी प्रसारण (व्यवस्थापक)',
+    'sos.personal_distress_title': 'व्यक्तिगत आपातकालीन संकट सहायता (फ्री विल)',
+    'sos.request_broadcast_title': 'परिसर-व्यापी प्रसारण अनुमति का अनुरोध',
+    'sos.pending_requests': 'लंबित SOS प्रसारण अनुरोध',
     'sos.hold_btn': 'SOS के लिए दबाए रखें',
     'sos.holding': 'दबाए रखें…',
     'sos.voice_trigger': 'आवाज़ द्वारा SOS ट्रिगर',
@@ -154,6 +167,9 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     'maint.camera_capture': 'कैमरे से सीधा फोटो खींचें',
     'maint.photo_validation': 'फोटो सत्यापित (स्पष्ट रोशनी व रेजोल्यूशन)',
     'maint.submit_report': 'शिकायत दर्ज करें',
+    'maint.student_verification': 'विद्यार्थी रिकॉर्ड्स व AI सत्यापन',
+    'maint.tab_repairs': 'शिकायतें व मरम्मत कार्य',
+    'maint.tab_students': 'विद्यार्थी सत्यापन व रिकॉर्ड्स',
 
     // Security & Visitors
     'sec.visitor_checkin': 'आगंतुक प्रवेश पर्ची',

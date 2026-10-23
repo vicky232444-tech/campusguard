@@ -29,12 +29,28 @@ export async function POST(req: NextRequest) {
     latitude?: number | null
     longitude?: number | null
     locationText?: string
+    isMassBroadcast?: boolean
+    triggerSource?: 'MANUAL_ADMIN' | 'MANUAL_USER' | 'APPROVED_REQUEST' | 'AUTO_DISASTER'
   }
 
   const validTypes = ['MEDICAL', 'FIRE', 'SECURITY_THREAT', 'ACCIDENT', 'OTHER']
   if (!validTypes.includes(body.emergencyType)) {
     return Response.json({ error: 'Invalid emergency type' }, { status: 400 })
   }
+
+  // SOS ACCESS CONTROL: Only Administrator can trigger mass broadcast across all devices
+  const wantsMassBroadcast = body.isMassBroadcast === true
+  if (wantsMassBroadcast && user.role !== 'ADMIN') {
+    return Response.json(
+      { error: 'Unauthorized: Only administrators have direct permission to trigger SOS across all devices. Please submit an Admin Approval Request.' },
+      { status: 403 }
+    )
+  }
+
+  const isMassBroadcast = user.role === 'ADMIN' ? wantsMassBroadcast : false
+  const triggerSource = user.role === 'ADMIN' && wantsMassBroadcast
+    ? 'MANUAL_ADMIN'
+    : (body.triggerSource || 'MANUAL_USER')
 
   const shareLocation = body.shareLocation === true // privacy: opt-in only
   const hasCoords = shareLocation && typeof body.latitude === 'number' && typeof body.longitude === 'number'
@@ -50,17 +66,27 @@ export async function POST(req: NextRequest) {
       latitude: hasCoords ? (body.latitude as number) : null,
       longitude: hasCoords ? (body.longitude as number) : null,
       locationText: body.locationText || null,
+      isMassBroadcast,
+      triggerSource,
       status: 'ACTIVE',
     },
   })
 
   // Cross-module alert so the dashboard & notification center pick it up
+  const alertTitle = isMassBroadcast
+    ? `🚨 CAMPUS-WIDE SOS · ${body.emergencyType.replaceAll('_', ' ')}`
+    : `Personal SOS · ${body.emergencyType.replaceAll('_', ' ')}`
+
+  const alertMessage = isMassBroadcast
+    ? `ALL-DEVICES EMERGENCY EVACUATION triggered by Administrator (${user.name})${body.locationText ? ` for ${body.locationText}` : ''}: ${body.message || 'Immediate safety protocols active across campus.'}`
+    : `${user.name} (${user.role.replace('_', ' ').toLowerCase()}) triggered a personal distress alert${body.locationText ? ` at ${body.locationText}` : ''}. Security team dispatched.`
+
   const alert = await db.alert.create({
     data: {
       type: 'SOS',
       severity: 'CRITICAL',
-      title: `SOS · ${body.emergencyType.replaceAll('_', ' ')}`,
-      message: `${user.name} (${user.role.replace('_', ' ').toLowerCase()}) triggered an emergency alert${body.locationText ? ` at ${body.locationText}` : ''}.`,
+      title: alertTitle,
+      message: alertMessage,
       zone: body.locationText || null,
       sourceType: 'SosAlert',
       sourceId: sos.id,
@@ -68,6 +94,10 @@ export async function POST(req: NextRequest) {
     },
   })
 
-  await broadcast({ kind: 'sos:new', payload: { sos, alert } })
+  await broadcast({
+    kind: 'sos:new',
+    payload: { sos, alert, isMassBroadcast },
+  })
+
   return Response.json({ sos, alert })
 }

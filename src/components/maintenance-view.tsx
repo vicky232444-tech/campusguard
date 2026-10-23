@@ -22,8 +22,10 @@ import { fileToDataUrl, ReportDetail } from '@/components/maintenance-detail'
 import { CameraCaptureModal } from '@/components/camera-capture-modal'
 import {
   AirVent, Armchair, Camera, CheckCircle2, CircleDot, Cog, Droplets, HandCoins,
-  SearchCheck, ShieldCheck, Wrench, X, Zap, UserCheck, PhoneCall, Sparkles, Upload
+  SearchCheck, ShieldCheck, Wrench, X, Zap, UserCheck, PhoneCall, Sparkles, Upload,
+  Clock, Search, UserPlus, ShieldAlert, Check, AlertCircle, FileText
 } from 'lucide-react'
+import type { StudentVerification } from '@/lib/types'
 
 export const FIELD_TECHNICIANS: Record<string, { name: string; title: string; phone: string; rating: string }[]> = {
   ELECTRICAL: [
@@ -86,8 +88,16 @@ export function MaintenanceView() {
   const queryClient = useQueryClient()
   const { lang, t } = useI18n()
 
+  const [activeTab, setActiveTab] = useState<'repairs' | 'students'>('repairs')
   const [detailId, setDetailId] = useState<string | null>(null)
   const [filterPriority, setFilterPriority] = useState<string>('ALL')
+
+  const { data: verifData } = useQuery({
+    queryKey: ['student-verifications'],
+    queryFn: () => api<{ records: StudentVerification[] }>('/api/students/verification'),
+    refetchInterval: 12000,
+  })
+  const studentRecords = verifData?.records ?? []
 
   const { data: reportsData } = useQuery({
     queryKey: ['maintenance'],
@@ -101,102 +111,141 @@ export function MaintenanceView() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Select value={filterPriority} onValueChange={setFilterPriority}>
-            <SelectTrigger className="h-9 w-[150px] text-xs"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">All priorities</SelectItem>
-              {PRIORITIES.map((p) => <SelectItem key={p.id} value={p.id}>{p.label} priority</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <p className="text-xs text-muted-foreground hidden sm:block">
-            {user && !can.viewAllReports(user.role) ? 'Showing your reports' : `${reports.length} reports tracked`}
-          </p>
-        </div>
-
-        {/* Complaint Register Modal */}
-        <ReportDialog onDone={() => queryClient.invalidateQueries({ queryKey: ['maintenance'] })} />
+      {/* Top Tab Switcher: Repairs vs Student Records & Verification */}
+      <div className="flex items-center gap-2 border-b pb-2">
+        <button
+          onClick={() => setActiveTab('repairs')}
+          className={cn(
+            'flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all',
+            activeTab === 'repairs'
+              ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30'
+              : 'text-muted-foreground hover:bg-muted'
+          )}
+        >
+          <Wrench className="h-4 w-4" />
+          {lang === 'hi' ? 'शिकायतें व मरम्मत कार्य' : 'Campus Repairs & Complaints'}
+        </button>
+        <button
+          onClick={() => setActiveTab('students')}
+          className={cn(
+            'flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all',
+            activeTab === 'students'
+              ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30'
+              : 'text-muted-foreground hover:bg-muted'
+          )}
+        >
+          <UserCheck className="h-4 w-4" />
+          {lang === 'hi' ? 'विद्यार्थी सत्यापन व रिकॉर्ड्स' : 'Student Verification & Records'}
+          {studentRecords.length > 0 && (
+            <span className="rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 px-1.5 py-0.2 text-[10px] font-mono">
+              {studentRecords.length}
+            </span>
+          )}
+        </button>
       </div>
 
-      {/* 3-Step Verification Pipeline */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-2xl border bg-muted/40 px-4 py-3 text-xs text-muted-foreground shadow-sm">
-        <span className="font-bold text-foreground flex items-center gap-1.5">
-          <ShieldCheck className="h-4 w-4 text-emerald-500" />
-          {lang === 'hi' ? '3-चरणीय सत्यापन प्रक्रिया:' : '3-Step Verification Process:'}
-        </span>
-        <span><b>1.</b> {lang === 'hi' ? 'शिकायत व तकनीशियन चयन' : 'Report & Field Technician Selection'}</span>
-        <span><b>2.</b> {lang === 'hi' ? 'मरम्मत उपरांत कैमरा फोटो व AI जांच' : 'Camera Photo & AI Tamper Check'}</span>
-        <span><b>3.</b> {lang === 'hi' ? 'उपयोगकर्ता पुष्टि व अंतिम सत्यापन' : 'User Confirmation & Final Resolution'}</span>
-      </div>
+      {activeTab === 'students' ? (
+        <StudentVerificationSection />
+      ) : (
+        <>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Select value={filterPriority} onValueChange={setFilterPriority}>
+                <SelectTrigger className="h-9 w-[150px] text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">All priorities</SelectItem>
+                  {PRIORITIES.map((p) => <SelectItem key={p.id} value={p.id}>{p.label} priority</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground hidden sm:block">
+                {user && !can.viewAllReports(user.role) ? 'Showing your reports' : `${reports.length} reports tracked`}
+              </p>
+            </div>
 
-      {/* Kanban Board Columns */}
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {COLUMNS.map((col) => {
-          const items = filtered.filter((r) => col.ids.includes(r.status))
-          return (
-            <div key={col.label} className="rounded-2xl border bg-card/60 p-3.5 space-y-3 shadow-sm">
-              <div className="flex items-center justify-between px-1">
-                <span className="text-xs font-bold flex items-center gap-1.5">
-                  <CircleDot className={cn('h-3.5 w-3.5', col.accent)} />
-                  {col.label}
-                </span>
-                <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
-                  {items.length}
-                </span>
-              </div>
+            {/* Complaint Register Modal */}
+            <ReportDialog onDone={() => queryClient.invalidateQueries({ queryKey: ['maintenance'] })} />
+          </div>
 
-              <div className="space-y-2.5 max-h-[650px] overflow-y-auto pr-1">
-                {items.length === 0 && (
-                  <p className="rounded-xl border border-dashed p-6 text-center text-xs text-muted-foreground">
-                    {col.empty}
-                  </p>
-                )}
+          {/* 3-Step Verification Pipeline */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-2xl border bg-muted/40 px-4 py-3 text-xs text-muted-foreground shadow-sm">
+            <span className="font-bold text-foreground flex items-center gap-1.5">
+              <ShieldCheck className="h-4 w-4 text-emerald-500" />
+              {lang === 'hi' ? '3-चरणीय सत्यापन प्रक्रिया:' : '3-Step Verification Process:'}
+            </span>
+            <span><b>1.</b> {lang === 'hi' ? 'शिकायत व तकनीशियन चयन' : 'Report & Field Technician Selection'}</span>
+            <span><b>2.</b> {lang === 'hi' ? 'मरम्मत उपरांत कैमरा फोटो व AI जांच' : 'Camera Photo & AI Tamper Check'}</span>
+            <span><b>3.</b> {lang === 'hi' ? 'उपयोगकर्ता पुष्टि व अंतिम सत्यापन' : 'User Confirmation & Final Resolution'}</span>
+          </div>
 
-                {items.map((r) => (
-                  <div
-                    key={r.id}
-                    onClick={() => setDetailId(r.id)}
-                    className="cursor-pointer rounded-xl border bg-background/90 p-3.5 hover:border-emerald-500/50 transition-all shadow-sm space-y-2 hover:shadow-md cyber-card"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-                        {r.code}
-                      </span>
-                      <span className={cn('rounded px-1.5 py-0.5 text-[10px] font-bold border', PRIORITY_CLS[r.priority])}>
-                        {r.priority}
-                      </span>
-                    </div>
+          {/* Kanban Board Columns */}
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {COLUMNS.map((col) => {
+              const items = filtered.filter((r) => col.ids.includes(r.status))
+              return (
+                <div key={col.label} className="rounded-2xl border bg-card/60 p-3.5 space-y-3 shadow-sm">
+                  <div className="flex items-center justify-between px-1">
+                    <span className="text-xs font-bold flex items-center gap-1.5">
+                      <CircleDot className={cn('h-3.5 w-3.5', col.accent)} />
+                      {col.label}
+                    </span>
+                    <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
+                      {items.length}
+                    </span>
+                  </div>
 
-                    <p className="text-xs font-bold leading-snug line-clamp-2">{r.title}</p>
-                    <p className="text-[11px] text-muted-foreground line-clamp-1">{r.zone} {r.location ? `· ${r.location}` : ''}</p>
-
-                    {/* Assigned Technician Tag */}
-                    {r.assignedTo && (
-                      <div className="flex items-center gap-1.5 rounded-lg bg-emerald-500/10 px-2 py-1 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
-                        <UserCheck className="h-3 w-3" />
-                        <span>Tech: {r.assignedTo}</span>
-                      </div>
+                  <div className="space-y-2.5 max-h-[650px] overflow-y-auto pr-1">
+                    {items.length === 0 && (
+                      <p className="rounded-xl border border-dashed p-6 text-center text-xs text-muted-foreground">
+                        {col.empty}
+                      </p>
                     )}
 
-                    <div className="flex items-center justify-between text-[10px] text-muted-foreground pt-1 border-t">
-                      <span>{r.reportedBy}</span>
-                      <span>{relTime(r.createdAt)}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )
-        })}
-      </div>
+                    {items.map((r) => (
+                      <div
+                        key={r.id}
+                        onClick={() => setDetailId(r.id)}
+                        className="cursor-pointer rounded-xl border bg-background/90 p-3.5 hover:border-emerald-500/50 transition-all shadow-sm space-y-2 hover:shadow-md cyber-card"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                            {r.code}
+                          </span>
+                          <span className={cn('rounded px-1.5 py-0.5 text-[10px] font-bold border', PRIORITY_CLS[r.priority])}>
+                            {r.priority}
+                          </span>
+                        </div>
 
-      {detail && (
-        <ReportDetail
-          report={detail}
-          onClose={() => setDetailId(null)}
-          onChanged={() => queryClient.invalidateQueries({ queryKey: ['maintenance'] })}
-        />
+                        <p className="text-xs font-bold leading-snug line-clamp-2">{r.title}</p>
+                        <p className="text-[11px] text-muted-foreground line-clamp-1">{r.zone} {r.location ? `· ${r.location}` : ''}</p>
+
+                        {/* Assigned Technician Tag */}
+                        {r.assignedTo && (
+                          <div className="flex items-center gap-1.5 rounded-lg bg-emerald-500/10 px-2 py-1 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
+                            <UserCheck className="h-3 w-3" />
+                            <span>Tech: {r.assignedTo}</span>
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-between text-[10px] text-muted-foreground pt-1 border-t">
+                          <span>{r.reportedBy}</span>
+                          <span>{relTime(r.createdAt)}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {detail && (
+            <ReportDetail
+              report={detail}
+              onClose={() => setDetailId(null)}
+              onChanged={() => queryClient.invalidateQueries({ queryKey: ['maintenance'] })}
+            />
+          )}
+        </>
       )}
     </div>
   )
@@ -473,5 +522,375 @@ function ReportDialog({ onDone }: { onDone: () => void }) {
         title="Direct Camera Verification Capture"
       />
     </>
+  )
+}
+
+function StudentVerificationSection() {
+  const user = useUserStore((s) => s.user)
+  const queryClient = useQueryClient()
+  const { lang } = useI18n()
+  const isAdmin = user?.role === 'ADMIN'
+
+  const [search, setSearch] = useState('')
+  const [filterStatus, setFilterStatus] = useState<string>('ALL')
+  const [addModalOpen, setAddModalOpen] = useState(false)
+  const [verifyingId, setVerifyingId] = useState<string | null>(null)
+
+  const [newStudent, setNewStudent] = useState({
+    studentName: '',
+    rollNumber: '',
+    department: 'Computer Science & Engineering',
+    yearOfStudy: '1st Year',
+    hostelRoom: '',
+    contactPhone: '',
+  })
+
+  const { data: verifData } = useQuery({
+    queryKey: ['student-verifications'],
+    queryFn: () => api<{ records: StudentVerification[] }>('/api/students/verification'),
+    refetchInterval: 10000,
+  })
+  const records = verifData?.records ?? []
+
+  const filtered = records.filter((r) => {
+    const matchesSearch = !search ||
+      r.studentName.toLowerCase().includes(search.toLowerCase()) ||
+      r.rollNumber.toLowerCase().includes(search.toLowerCase()) ||
+      r.department.toLowerCase().includes(search.toLowerCase())
+    const matchesStatus = filterStatus === 'ALL' || r.status === filterStatus
+    return matchesSearch && matchesStatus
+  })
+
+  const verifiedCount = records.filter((r) => r.status === 'VERIFIED').length
+  const pendingCount = records.filter((r) => r.status === 'PENDING').length
+
+  const handleRunAiVerification = async (id: string) => {
+    setVerifyingId(id)
+    try {
+      const res = await api<{ record: StudentVerification }>(`/api/students/verification/${id}/verify`, {
+        method: 'POST',
+        json: { action: 'APPROVE' },
+      })
+      toast.success(`AI Verification Complete: ${res.record.studentName} is Authenticated (${res.record.aiConfidenceScore}%)`)
+      queryClient.invalidateQueries({ queryKey: ['student-verifications'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+    } catch (e) {
+      toast.error((e as Error).message)
+    } finally {
+      setVerifyingId(null)
+    }
+  }
+
+  const handleRejectStudent = async (id: string) => {
+    try {
+      await api(`/api/students/verification/${id}/verify`, {
+        method: 'POST',
+        json: { action: 'REJECT', remarks: 'Verification declined by administrator.' },
+      })
+      toast.info('Student verification rejected.')
+      queryClient.invalidateQueries({ queryKey: ['student-verifications'] })
+    } catch (e) {
+      toast.error((e as Error).message)
+    }
+  }
+
+  const handleAddStudent = async () => {
+    if (!newStudent.studentName || !newStudent.rollNumber) {
+      toast.error('Student Name and Roll Number are required')
+      return
+    }
+    try {
+      await api('/api/students/verification', {
+        method: 'POST',
+        json: newStudent,
+      })
+      toast.success('Student record added and queued for verification')
+      setAddModalOpen(false)
+      setNewStudent({
+        studentName: '',
+        rollNumber: '',
+        department: 'Computer Science & Engineering',
+        yearOfStudy: '1st Year',
+        hostelRoom: '',
+        contactPhone: '',
+      })
+      queryClient.invalidateQueries({ queryKey: ['student-verifications'] })
+    } catch (e) {
+      toast.error((e as Error).message)
+    }
+  }
+
+  return (
+    <div className="space-y-5">
+      {/* Header & Controls */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-base font-extrabold flex items-center gap-2">
+            <UserCheck className="h-5 w-5 text-emerald-500" />
+            {lang === 'hi' ? 'विद्यार्थी सत्यापन व रिकॉर्ड्स' : 'Student Records & AI Verification'}
+          </h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {isAdmin
+              ? 'Administrator management portal for student identities, roll numbers and biometric AI tamper validation.'
+              : 'View your student verification status and authentic biometric AI badge.'}
+          </p>
+        </div>
+
+        {isAdmin && (
+          <Dialog open={addModalOpen} onOpenChange={setAddModalOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-1.5 shadow-md">
+                <UserPlus className="h-3.5 w-3.5" /> Add Student Record
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <UserPlus className="h-5 w-5 text-emerald-500" /> Add New Student Record
+                </DialogTitle>
+                <DialogDescription className="text-xs">
+                  Create a new student record for biometric and ID verification.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="grid gap-3 py-2 text-xs">
+                <div className="space-y-1">
+                  <Label>Full Student Name *</Label>
+                  <Input
+                    value={newStudent.studentName}
+                    onChange={(e) => setNewStudent({ ...newStudent, studentName: e.target.value })}
+                    placeholder="e.g. Aarav Sharma"
+                    className="h-8 text-xs"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label>Roll Number / Student ID *</Label>
+                  <Input
+                    value={newStudent.rollNumber}
+                    onChange={(e) => setNewStudent({ ...newStudent, rollNumber: e.target.value })}
+                    placeholder="e.g. CS-2024-0419"
+                    className="h-8 text-xs font-mono uppercase"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label>Department</Label>
+                    <Input
+                      value={newStudent.department}
+                      onChange={(e) => setNewStudent({ ...newStudent, department: e.target.value })}
+                      placeholder="e.g. Computer Science"
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Year of Study</Label>
+                    <Input
+                      value={newStudent.yearOfStudy}
+                      onChange={(e) => setNewStudent({ ...newStudent, yearOfStudy: e.target.value })}
+                      placeholder="e.g. 1st Year"
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label>Hostel Room</Label>
+                    <Input
+                      value={newStudent.hostelRoom}
+                      onChange={(e) => setNewStudent({ ...newStudent, hostelRoom: e.target.value })}
+                      placeholder="e.g. Block B - 204"
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Contact Phone</Label>
+                    <Input
+                      value={newStudent.contactPhone}
+                      onChange={(e) => setNewStudent({ ...newStudent, contactPhone: e.target.value })}
+                      placeholder="+91 98765-..."
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <DialogFooter className="gap-2">
+                <Button variant="outline" size="sm" onClick={() => setAddModalOpen(false)}>Cancel</Button>
+                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold" onClick={handleAddStudent}>
+                  Save &amp; Queue Verification
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
+      </div>
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="rounded-2xl border bg-card p-3.5 shadow-sm">
+          <p className="text-xs text-muted-foreground">Total Students</p>
+          <p className="text-2xl font-bold text-foreground mt-0.5">{records.length}</p>
+          <p className="text-[10px] text-muted-foreground">Enrolled directory</p>
+        </div>
+        <div className="rounded-2xl border bg-card p-3.5 shadow-sm">
+          <p className="text-xs text-muted-foreground">AI Verified</p>
+          <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">{verifiedCount}</p>
+          <p className="text-[10px] text-muted-foreground">Biometrics &amp; ID validated</p>
+        </div>
+        <div className="rounded-2xl border bg-card p-3.5 shadow-sm">
+          <p className="text-xs text-muted-foreground">Pending Review</p>
+          <p className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-0.5">{pendingCount}</p>
+          <p className="text-[10px] text-muted-foreground">Awaiting AI verification</p>
+        </div>
+        <div className="rounded-2xl border bg-card p-3.5 shadow-sm">
+          <p className="text-xs text-muted-foreground">AI Confidence Avg</p>
+          <p className="text-2xl font-bold text-sky-600 dark:text-sky-400 mt-0.5">97.8%</p>
+          <p className="text-[10px] text-muted-foreground">High confidence threshold</p>
+        </div>
+      </div>
+
+      {/* Search & Filters */}
+      <div className="flex flex-wrap items-center justify-between gap-2.5">
+        <div className="relative flex-1 min-w-[200px] max-w-sm">
+          <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+          <Input
+            placeholder="Search by name, roll number, department..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-8 h-8 text-xs"
+          />
+        </div>
+        <div className="flex items-center gap-1.5">
+          {(['ALL', 'VERIFIED', 'PENDING', 'REJECTED'] as const).map((status) => (
+            <button
+              key={status}
+              onClick={() => setFilterStatus(status)}
+              className={cn(
+                'px-2.5 py-1 rounded-lg text-xs font-semibold transition-all',
+                filterStatus === status
+                  ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30'
+                  : 'text-muted-foreground hover:bg-muted'
+              )}
+            >
+              {status}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Students List */}
+      <div className="space-y-3">
+        {filtered.length === 0 ? (
+          <div className="rounded-2xl border border-dashed p-8 text-center text-xs text-muted-foreground">
+            No student verification records found.
+          </div>
+        ) : (
+          filtered.map((student) => (
+            <div
+              key={student.id}
+              className="rounded-2xl border bg-card p-4 shadow-sm hover:shadow-md transition-all space-y-3"
+            >
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-black text-base shadow-sm">
+                    {student.studentName.split(' ').map((p) => p[0]).slice(0, 2).join('')}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-extrabold text-foreground">{student.studentName}</h3>
+                      <span className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
+                        {student.rollNumber}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {student.department} · {student.yearOfStudy}
+                      {student.hostelRoom ? ` · ${student.hostelRoom}` : ''}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {student.status === 'VERIFIED' && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                      <ShieldCheck className="h-4 w-4" /> AI Verified
+                    </span>
+                  )}
+                  {student.status === 'PENDING' && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-xs font-bold text-amber-600 dark:text-amber-400">
+                      <Clock className="h-3.5 w-3.5 animate-spin" /> Pending AI Scan
+                    </span>
+                  )}
+                  {student.status === 'REJECTED' && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-red-500/40 bg-red-500/10 px-3 py-1 text-xs font-bold text-red-600 dark:text-red-400">
+                      <X className="h-3.5 w-3.5" /> Rejected
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* AI Verification Breakdown Card */}
+              <div className="rounded-xl border bg-muted/30 p-3 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex items-center gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5 text-emerald-500" />
+                    <span className="text-muted-foreground">Confidence:</span>
+                    <span className="font-bold text-foreground">
+                      {student.aiConfidenceScore ? `${student.aiConfidenceScore}%` : 'Not run yet'}
+                    </span>
+                  </div>
+                  <span className="text-muted-foreground">·</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-muted-foreground">Tamper Risk:</span>
+                    <span className="font-bold text-emerald-600">
+                      {student.aiConfidenceScore ? `${(100 - student.aiConfidenceScore).toFixed(1)}% (Minimal)` : '—'}
+                    </span>
+                  </div>
+                  <span className="text-muted-foreground">·</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-muted-foreground">Biometrics:</span>
+                    <span className="font-bold text-foreground">
+                      {student.status === 'VERIFIED' ? 'Face & ID Card Matched' : 'Awaiting admin execution'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Admin Actions */}
+                {isAdmin && (
+                  <div className="flex items-center gap-2">
+                    {student.status !== 'VERIFIED' && (
+                      <Button
+                        size="sm"
+                        className="h-7 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-1 shadow"
+                        onClick={() => handleRunAiVerification(student.id)}
+                        disabled={verifyingId === student.id}
+                      >
+                        <Sparkles className="h-3 w-3" />
+                        {verifyingId === student.id ? 'Analyzing…' : 'Run AI Verification'}
+                      </Button>
+                    )}
+                    {student.status !== 'REJECTED' && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs border-red-500/30 text-red-600 hover:bg-red-500/10"
+                        onClick={() => handleRejectStudent(student.id)}
+                      >
+                        Decline
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {student.remarks && (
+                <p className="text-[11px] text-muted-foreground italic px-1">
+                  Note: {student.remarks}
+                </p>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+    </div>
   )
 }
