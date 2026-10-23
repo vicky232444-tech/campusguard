@@ -17,13 +17,20 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   if (!can.submitProof(user.role)) return forbidden()
 
   const { id } = await ctx.params
-  const { proofMedia, note } = (await req.json()) as { proofMedia?: string; note?: string }
-
-  if (!proofMedia || !proofMedia.startsWith('data:image/')) {
-    return Response.json({ error: 'A proof photo is required' }, { status: 400 })
+  const { proofMedia, note, proofType, paymentMethod, paymentAmount, paymentTxnId } = (await req.json()) as {
+    proofMedia?: string
+    note?: string
+    proofType?: 'photo' | 'video'
+    paymentMethod?: 'CASH' | 'ONLINE_QR'
+    paymentAmount?: number
+    paymentTxnId?: string
   }
-  if (proofMedia.length > 1_500_000) {
-    return Response.json({ error: 'Photo too large — please choose a smaller image' }, { status: 400 })
+
+  if (!proofMedia || (!proofMedia.startsWith('data:image/') && !proofMedia.startsWith('data:video/'))) {
+    return Response.json({ error: 'A proof photo or video is required' }, { status: 400 })
+  }
+  if (proofMedia.length > 5_000_000) {
+    return Response.json({ error: 'Proof file too large — please upload under 5MB' }, { status: 400 })
   }
 
   const report = await db.maintenanceReport.findUnique({ where: { id } })
@@ -110,6 +117,11 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
       proofMedia,
       proofNote: note?.trim() || null,
       proofUploadedAt: new Date(),
+      proofType: proofType || 'photo',
+      paymentMethod: paymentMethod || null,
+      paymentAmount: paymentAmount != null ? Number(paymentAmount) : null,
+      paymentTxnId: paymentTxnId || null,
+      paymentStatus: paymentMethod ? 'PAID' : 'PENDING',
       aiAuthenticity: ai.verdict,
       aiTamperScore: ai.tamperScore,
       aiAuthenticityNote: ai.note,

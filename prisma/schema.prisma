@@ -15,15 +15,24 @@ model User {
   username    String   @unique // individual login name per person
   email       String   @unique
   password    String // scrypt$<salt>$<hash> — individual credentials per user
-  role        String // STUDENT | STAFF | SECURITY | MAINTENANCE | ADMIN
+  role        String // STUDENT | SECURITY | MAINTENANCE | ADMIN (Staff removed)
   dept        String?
   rollNumber  String?
   isVerified  Boolean  @default(false)
+  phone       String?
+  warningCount Int      @default(0)
+  lastWarningAt DateTime?
+  warningsResetAt DateTime?
+  isSuspended Boolean  @default(false)
+  suspendedAt DateTime?
+  suspensionReason String?
   color       String   @default("#10b981")
   createdAt   DateTime @default(now())
   reports     MaintenanceReport[] @relation("Reporter")
   assigned    MaintenanceReport[] @relation("Assignee")
   studentVerifications StudentVerification[]
+  ratings     WorkerRating[]
+  appeals     SuspensionAppeal[]
 }
 
 // ─── Module 1: Building Condition Monitoring ─────────────────────────────────
@@ -191,17 +200,24 @@ model MaintenanceReport {
   description  String
   zone         String
   location     String?
+  exactPlace   String?
   priority     String    @default("MEDIUM") // LOW | MEDIUM | HIGH | URGENT
   photoData    String? // base64 data URL
   status       String    @default("PENDING") // PENDING | APPROVED | IN_PROGRESS | PROOF_SUBMITTED | AWAITING_ADMIN | RESOLVED | REJECTED
   assignedTo   String?
   assignedToId String?
   assignee     User?     @relation("Assignee", fields: [assignedToId], references: [id])
+  proofType    String?   @default("photo") // photo | video
+  paymentMethod String?  // CASH | ONLINE_QR
+  paymentStatus String?  @default("PENDING") // PENDING | PAID
+  paymentTxnId String?
+  paymentAmount Float?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   resolvedAt   DateTime?
   updates      ReportUpdate[]
   fines        Fine[]
+  ratings      WorkerRating[]
 
   // ── 3-step verification workflow ──────────────────────────────────────────
   // Step 1: admin verifies the report & forwards it to the maintenance team
@@ -252,4 +268,71 @@ model Fine {
   status     String   @default("ISSUED") // ISSUED | WAIVED
   issuedBy   String   @default("AI Verification Engine")
   createdAt  DateTime @default(now())
+}
+
+// ─── Module 5: Worker Ratings, Genuineness Review & Suspensions ───────────────
+
+model WorkerRating {
+  id                   String    @id @default(cuid())
+  reportId             String
+  report               MaintenanceReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  reportCode           String
+  userId               String
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userName             String
+  userPhone            String
+  workerName           String
+  workerCategory       String
+  stars                Int       // 1 - 5
+  feedback             String
+  workQualityScore     Int       @default(9) // 1 - 10
+  timelinessScore      Int       @default(9) // 1 - 10
+  cleanlinessScore     Int       @default(9) // 1 - 10
+  phoneConsentGiven    Boolean   @default(true)
+  status               String    @default("PENDING_ADMIN_REVIEW") // PENDING_ADMIN_REVIEW | CALL_VERIFIED | APPROVED | REJECTED_FALSE
+  reviewedBy           String?
+  reviewedAt           DateTime?
+  adminNotes           String?
+  rejectionReason      String?
+  verificationCallAt   DateTime?
+  verificationCallNotes String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@index([status, workerName])
+  @@index([userId, createdAt])
+}
+
+model SuspensionAppeal {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userName    String
+  userEmail   String
+  userPhone   String?
+  explanation String
+  proofMedia  String?   // base64 photo or video URL
+  status      String    @default("PENDING") // PENDING | APPROVED | REJECTED
+  adminNotes  String?
+  reviewedBy  String?
+  reviewedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status, userId])
+}
+
+// ─── Module 6: Universal Building & Blueprint Configuration ───────────────────
+
+model BuildingConfig {
+  id          String    @id @default(cuid())
+  name        String    @default("OmniGuard Metropolitan Facility")
+  type        String    @default("MIXED_USE") // PUBLIC_HOSPITAL | RESIDENTIAL_COLONY | COMMERCIAL_COMPLEX | CIVIC_PUBLIC
+  address     String    @default("Sector 42, Central Boulevard")
+  latitude    Float     @default(28.6139)
+  longitude   Float     @default(77.2090)
+  totalFloors Int       @default(12)
+  mapImageUrl String?
+  updatedBy   String?
+  updatedAt   DateTime  @updatedAt
 }

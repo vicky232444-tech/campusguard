@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils'
 import {
   Building2, ShieldCheck, Loader2, Radio, Eye, EyeOff, User as UserIcon,
   KeyRound, LogIn, AlertCircle, ChevronDown, CheckCircle2, UserPlus, Mail,
-  GraduationCap, Briefcase, Languages
+  GraduationCap, Languages
 } from 'lucide-react'
 
 type AccountInfo = {
@@ -25,15 +25,14 @@ type AccountInfo = {
 
 const DEMO_PASSWORDS: Record<string, string> = {
   aarav: 'aarav123',
-  priya: 'priya123',
   vikram: 'vikram123',
   meera: 'meera123',
   admin: 'admin123',
 }
 
 const ROLE_ICONS: Record<Role, React.ReactNode> = {
+  USER: <GraduationCap className="h-4 w-4" />,
   STUDENT: <GraduationCap className="h-4 w-4" />,
-  STAFF: <Briefcase className="h-4 w-4" />,
   SECURITY: <ShieldCheck className="h-4 w-4" />,
   MAINTENANCE: <Building2 className="h-4 w-4" />,
   ADMIN: <ShieldCheck className="h-4 w-4" />,
@@ -60,7 +59,7 @@ export function LoginScreen() {
   // Sign up state
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
-  const [regRole, setRegRole] = useState<'STUDENT' | 'STAFF' | 'SECURITY' | 'MAINTENANCE'>('STUDENT')
+  const [regRole, setRegRole] = useState<'STUDENT' | 'SECURITY' | 'MAINTENANCE'>('STUDENT')
   const [dept, setDept] = useState('')
 
   const usernameRef = useRef<HTMLInputElement>(null)
@@ -175,8 +174,8 @@ export function LoginScreen() {
               <ShieldCheck className="h-8 w-8" />
             </div>
             <div>
-              <h1 className="text-2xl font-extrabold tracking-tight">CampusGuard</h1>
-              <p className="text-xs text-muted-foreground">{t('header.subtitle')}</p>
+              <h1 className="text-2xl font-extrabold tracking-tight">OmniGuard</h1>
+              <p className="text-xs text-muted-foreground">Universal Building &amp; Facility Operations</p>
             </div>
           </div>
 
@@ -188,13 +187,13 @@ export function LoginScreen() {
               </span>
               <h2 className="text-3xl font-extrabold leading-tight tracking-tight">
                 {lang === 'hi'
-                  ? 'संपूर्ण परिसर के लिए आधुनिक सुरक्षा व कमान केंद्र।'
-                  : 'Modern Safety & Security Command Center for Your Entire Campus.'}
+                  ? 'सार्वजनिक व निजी भवनों के लिए आधुनिक सुरक्षा व प्रबंधन केंद्र।'
+                  : 'Modern Safety & Facility Command Center for Public & Private Buildings.'}
               </h2>
               <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
                 {lang === 'hi'
-                  ? 'सेंसर नेटवर्क, आपातकालीन वॉयस व 30-सेकंड सायरन SOS, आगंतुक प्रबंधन और फोटो सत्यापन युक्त रखरखाव प्रणाली।'
-                  : 'Automated sensor telemetry, emergency SOS with continuous 30-second siren & voice activation, fast visitor check-ins, and verified maintenance reports.'}
+                  ? 'अस्पताल, आवासीय कॉलोनी व कॉर्पोरेट परिसरों के लिए सेंसर टेलीमेट्री, आपातकालीन SOS, स्मार्ट आगंतुक प्रविष्टि और सत्यापित मरम्मत प्रणाली।'
+                  : 'Universal building operations for hospitals, residential colonies & corporate complexes — telemetry, emergency SOS, fast visitor access & verified repairs.'}
               </p>
             </div>
 
@@ -209,13 +208,13 @@ export function LoginScreen() {
               </div>
               <div className="flex items-center gap-3 rounded-lg border bg-card/60 p-2.5">
                 <Building2 className="h-4 w-4 text-emerald-500" />
-                <span>{lang === 'hi' ? 'कैमरा फोटो सत्यापन सहित रखरखाव प्रबंधन' : 'Direct Camera Capture & Verified Repairs'}</span>
+                <span>{lang === 'hi' ? 'कैमरा फोटो व क्यूआर भुगतान सहित रखरखाव प्रबंधन' : 'Direct Camera Proof & QR Payment Repairs'}</span>
               </div>
             </div>
           </div>
 
           <div className="text-xs text-muted-foreground">
-            CampusGuard Secure Enterprise Edition · High Availability Multi-Zone Deployment
+            OmniGuard Universal Facility Management · Multi-Zone Enterprise Architecture
           </div>
         </div>
 
@@ -227,8 +226,8 @@ export function LoginScreen() {
                 <ShieldCheck className="h-6 w-6" />
               </div>
               <div>
-                <h1 className="text-lg font-bold">CampusGuard</h1>
-                <p className="text-xs text-muted-foreground">{t('header.subtitle')}</p>
+                <h1 className="text-lg font-bold">OmniGuard</h1>
+                <p className="text-xs text-muted-foreground">Universal Building Operations</p>
               </div>
             </div>
 
@@ -269,7 +268,7 @@ export function LoginScreen() {
               <p className="text-sm text-muted-foreground mt-1">
                 {mode === 'signin'
                   ? (lang === 'hi' ? 'अपने क्रेडेंशियल्स दर्ज करके कमांड सेंटर में प्रवेश करें।' : 'Enter your credentials to access the safety command center.')
-                  : (lang === 'hi' ? 'छात्र, शिक्षक, सुरक्षा या रखरखाव दल के लिए नया खाता बनाएं।' : 'Register a new account for student, staff, security or facilities.')}
+                  : (lang === 'hi' ? 'निवासी, आगंतुक, सुरक्षा या रखरखाव दल के लिए नया खाता बनाएं।' : 'Register a new account for resident, facilities or security.')}
               </p>
             </div>
 
@@ -395,10 +394,9 @@ export function LoginScreen() {
                       onChange={(e) => setRegRole(e.target.value as any)}
                       className="w-full h-10 rounded-lg border bg-card px-3 text-sm outline-none focus:border-emerald-500"
                     >
-                      <option value="STUDENT">Student (छात्र)</option>
-                      <option value="STAFF">Faculty / Staff (कर्मचारी)</option>
-                      <option value="MAINTENANCE">Maintenance (तकनीशियन)</option>
-                      <option value="SECURITY">Campus Security (सुरक्षा दल)</option>
+                      <option value="STUDENT">User / Resident (निवासी / नागरिक)</option>
+                      <option value="MAINTENANCE">Maintenance Technician (रखरखाव तकनीशियन)</option>
+                      <option value="SECURITY">Building Security (सुरक्षा दल)</option>
                     </select>
                   </div>
                 </div>

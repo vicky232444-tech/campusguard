@@ -1,4 +1,4 @@
-export type Role = 'STUDENT' | 'STAFF' | 'SECURITY' | 'MAINTENANCE' | 'ADMIN'
+export type Role = 'USER' | 'STUDENT' | 'SECURITY' | 'MAINTENANCE' | 'ADMIN'
 
 export type SessionUser = {
   id: string
@@ -9,6 +9,12 @@ export type SessionUser = {
   rollNumber?: string | null
   isVerified?: boolean
   color: string
+  phone?: string | null
+  warningCount?: number
+  lastWarningAt?: string | null
+  isSuspended?: boolean
+  suspendedAt?: string | null
+  suspensionReason?: string | null
 }
 
 export type Sensor = {
@@ -174,15 +180,22 @@ export type MaintenanceReport = {
   description: string
   zone: string
   location: string | null
+  exactPlace?: string | null
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'
   photoData: string | null
   status: ReportStatus
   assignedTo: string | null
+  proofType?: 'photo' | 'video' | null
+  paymentMethod?: 'CASH' | 'ONLINE_QR' | null
+  paymentStatus?: 'PENDING' | 'PAID' | null
+  paymentTxnId?: string | null
+  paymentAmount?: number | null
   createdAt: string
   updatedAt: string
   resolvedAt: string | null
   updates?: ReportUpdate[]
   fines?: Fine[]
+  ratings?: WorkerRating[]
   // 3-step verification workflow
   adminApprovedBy: string | null
   adminApprovedAt: string | null
@@ -201,6 +214,61 @@ export type MaintenanceReport = {
   finalVerdictBy: string | null
   finalVerdictAt: string | null
   reworkCount: number
+}
+
+export type WorkerRating = {
+  id: string
+  reportId: string
+  reportCode: string
+  userId: string
+  userName: string
+  userPhone: string
+  workerName: string
+  workerCategory: string
+  stars: number
+  feedback: string
+  workQualityScore: number
+  timelinessScore: number
+  cleanlinessScore: number
+  phoneConsentGiven: boolean
+  status: 'PENDING_ADMIN_REVIEW' | 'CALL_VERIFIED' | 'APPROVED' | 'REJECTED_FALSE'
+  reviewedBy: string | null
+  reviewedAt: string | null
+  adminNotes: string | null
+  rejectionReason: string | null
+  verificationCallAt: string | null
+  verificationCallNotes: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export type SuspensionAppeal = {
+  id: string
+  userId: string
+  userName: string
+  userEmail: string
+  userPhone: string | null
+  explanation: string
+  proofMedia: string | null
+  status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  adminNotes: string | null
+  reviewedBy: string | null
+  reviewedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export type BuildingConfig = {
+  id: string
+  name: string
+  type: 'PUBLIC_HOSPITAL' | 'RESIDENTIAL_COLONY' | 'COMMERCIAL_COMPLEX' | 'CIVIC_PUBLIC' | 'MIXED_USE'
+  address: string
+  latitude: number
+  longitude: number
+  totalFloors: number
+  mapImageUrl: string | null
+  updatedBy: string | null
+  updatedAt: string
 }
 
 export type LiveTick = {
@@ -246,28 +314,59 @@ export type DashboardData = {
   }[]
 }
 
+export const BUILDING_ZONES_CONFIG: Record<string, { label: string; places: string[] }> = {
+  'Residential & Inpatient Block A': {
+    label: 'Residential & Inpatient Block A',
+    places: ['Apartment 101 - 104', 'Apartment 201 - 204', 'Inpatient Ward 3A', 'Stairwell & Fire Exit', 'Elevator Lobby A'],
+  },
+  'Commercial & Diagnostic Block B': {
+    label: 'Commercial & Diagnostic Block B',
+    places: ['Outpatient Consultation Room', 'Pathology & Lab 102', 'Commercial Food Court', 'Pharmacy Desk', 'Corridor 2B'],
+  },
+  'Administrative & Executive Tower': {
+    label: 'Administrative & Executive Tower',
+    places: ['Main Reception Lobby', 'Boardroom & Conference Hall', 'Server Room & IT Rack', 'Management Office 401', 'Restroom 3F'],
+  },
+  'Central Utility & Chiller Plant': {
+    label: 'Central Utility & Chiller Plant',
+    places: ['HVAC Chiller Plant', 'High Voltage Substation Room', 'Water Sump & Pump House', 'Diesel Generator Room'],
+  },
+  'Community Hall & Recreation Wing': {
+    label: 'Community Hall & Recreation Wing',
+    places: ['Multi-Purpose Banquet Hall', 'Health Club & Gymnasium', 'Indoor Sports Complex', 'Library Lounge'],
+  },
+  'Basement & Multi-Level Parking': {
+    label: 'Basement & Multi-Level Parking',
+    places: ['Basement P1 (Resident Slots)', 'Basement P2 (Visitor Slots)', 'Drainage Sump Pit', 'EV Charging Bay'],
+  },
+  'Perimeter Gates & Security Checkpoint': {
+    label: 'Perimeter Gates & Security Checkpoint',
+    places: ['Main Gate 1 Checkpoint', 'Service & Cargo Gate 2', 'Security Command Cabin', 'Visitor Kiosk'],
+  },
+}
+
 export const ZONES = [
-  'Academic Block A',
-  'Academic Block B',
-  'Library',
-  'Cafeteria',
-  'Admin Block',
-  'Utility Block',
-  'Main Gate & Perimeter',
+  'Residential & Inpatient Block A',
+  'Commercial & Diagnostic Block B',
+  'Administrative & Executive Tower',
+  'Central Utility & Chiller Plant',
+  'Community Hall & Recreation Wing',
+  'Basement & Multi-Level Parking',
+  'Perimeter Gates & Security Checkpoint',
 ] as const
 
 export const ROLE_LABELS: Record<Role, string> = {
-  STUDENT: 'Student',
-  STAFF: 'Staff / Faculty',
-  SECURITY: 'Security Staff',
+  USER: 'Resident / Occupant',
+  STUDENT: 'Resident / Occupant',
+  SECURITY: 'Security Guard',
   MAINTENANCE: 'Maintenance Team',
-  ADMIN: 'Administrator',
+  ADMIN: 'Facility Administrator',
 }
 
 export const ROLE_BLURBS: Record<Role, string> = {
-  STUDENT: 'Trigger SOS, report faults with photos and follow your repair requests.',
-  STAFF: 'View monitoring & security, acknowledge alerts, report issues.',
-  SECURITY: 'Manage access logs & visitors, respond to SOS and security alerts.',
-  MAINTENANCE: 'Track and resolve repair requests across all buildings.',
-  ADMIN: 'Full command center: thresholds, alerts, incidents and analytics.',
+  USER: 'Register complaints with exact room selection, rate technicians, and access emergency SOS.',
+  STUDENT: 'Register complaints with exact room selection, rate technicians, and access emergency SOS.',
+  SECURITY: 'Manage gate entries of visitors and personnel, monitor perimeter access and respond to SOS.',
+  MAINTENANCE: 'Resolve assigned work orders, upload video/photo proof, and collect payment via cash/QR.',
+  ADMIN: 'Full facility command: building floorplan/map configuration, sensor telemetry, and rating review.',
 }

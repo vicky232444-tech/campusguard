@@ -632,7 +632,7 @@ function TechnicianDashboard() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 4. SECURITY / STAFF DASHBOARD: Gate Access, Visitors & Active SOS Beacons
+// 4. SECURITY DASHBOARD: Gate Access, Visitors & Active SOS Beacons
 // ─────────────────────────────────────────────────────────────────────────────
 function SecurityDashboard() {
   const { data: dash } = useQuery({
@@ -720,6 +720,6 @@ export function DashboardView() {
   if (user.role === 'MAINTENANCE') {
     return <TechnicianDashboard />
   }
-  // Staff & Security view
+  // Security view
   return <SecurityDashboard />
 }

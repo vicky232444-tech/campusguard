@@ -27,10 +27,15 @@ export async function GET(req: NextRequest) {
   return Response.json({ reports: withUpdates })
 }
 
-/** POST /api/maintenance — report a fault (all roles). */
+/** POST /api/maintenance — report a fault. */
 export async function POST(req: NextRequest) {
   const user = await getUser(req)
   if (!user) return unauthorized()
+
+  const dbUser = await db.user.findUnique({ where: { id: user.id } })
+  if (dbUser?.isSuspended) {
+    return forbidden('Your account is currently suspended due to false rating submissions. Please submit an appeal.')
+  }
 
   const body = (await req.json()) as {
     category: string
@@ -38,6 +43,7 @@ export async function POST(req: NextRequest) {
     description: string
     zone: string
     location?: string
+    exactPlace?: string
     priority?: string
     photoData?: string | null
     assignedTo?: string
@@ -48,7 +54,7 @@ export async function POST(req: NextRequest) {
   if (!categories.includes(body.category)) return Response.json({ error: 'Invalid category' }, { status: 400 })
   if (body.priority && !priorities.includes(body.priority)) return Response.json({ error: 'Invalid priority' }, { status: 400 })
   if (!body.title?.trim() || !body.description?.trim() || !body.zone) {
-    return Response.json({ error: 'Title, description and zone are required' }, { status: 400 })
+    return Response.json({ error: 'Title, description and building/zone are required' }, { status: 400 })
   }
   if (body.photoData && body.photoData.length > 1_500_000) {
     return Response.json({ error: 'Photo too large — please choose a smaller image' }, { status: 400 })
@@ -66,7 +72,8 @@ export async function POST(req: NextRequest) {
       title: body.title.trim(),
       description: body.description.trim(),
       zone: body.zone,
-      location: body.location?.trim() || null,
+      location: body.location?.trim() || body.exactPlace?.trim() || null,
+      exactPlace: body.exactPlace?.trim() || null,
       priority: body.priority || 'MEDIUM',
       photoData: body.photoData || null,
       assignedTo: body.assignedTo?.trim() || null,

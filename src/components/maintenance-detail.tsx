@@ -19,6 +19,7 @@ import { CameraCaptureModal } from '@/components/camera-capture-modal'
 import {
   BadgeCheck, BadgeX, Camera, CheckCircle2, ClipboardCheck, Gavel, HandCoins, ImageOff,
   Loader2, PlayCircle, RefreshCcw, Send, ShieldAlert, Sparkles, UserCheck, X,
+  Star, QrCode, Video, Smartphone, Check,
 } from 'lucide-react'
 
 const CATEGORIES: Record<string, string> = {
@@ -151,6 +152,15 @@ export function ReportDetail({
   // step 2 (maintenance)
   const [proofNote, setProofNote] = useState('')
   const [proofFile, setProofFile] = useState<{ data: string; name: string } | null>(null)
+  const [proofType, setProofType] = useState<'photo' | 'video'>('photo')
+  const [videoProof, setVideoProof] = useState<string>('')
+  const [paymentMode, setPaymentMode] = useState<'CASH' | 'ONLINE_QR'>('CASH')
+  const [paymentAmount, setPaymentAmount] = useState<number>(500)
+  const [txnId, setTxnId] = useState<string>(() => `TXN-${Date.now()}`)
+  const [paymentPaid, setPaymentPaid] = useState<boolean>(false)
+
+  // rating modal
+  const [ratingModalOpen, setRatingModalOpen] = useState(false)
   // step 3 (reporter)
   const [confirmNote, setConfirmNote] = useState('')
   const [confirmFile, setConfirmFile] = useState<{ data: string; name: string } | null>(null)
@@ -183,16 +193,20 @@ export function ReportDetail({
     }
   }
 
-  const submitWithAi = async (path: string, media: string | undefined, note: string, successMsg: string) => {
+  const submitWithAi = async (path: string, media: string | undefined, note: string, successMsg: string, extraJson?: Record<string, unknown>) => {
     if (!media) {
-      toast.error('Attach a photo first')
+      toast.error('Attach proof media first')
       return
     }
     setAiBusy(true)
     try {
       const res = await api<{ ai: { verdict: string; tamperScore?: number; score?: number; note: string } }>(path, {
         method: 'POST',
-        json: { [path.endsWith('/proof') ? 'proofMedia' : 'confirmMedia']: media, note: note || undefined },
+        json: {
+          [path.endsWith('/proof') ? 'proofMedia' : 'confirmMedia']: media,
+          note: note || undefined,
+          ...extraJson,
+        },
       })
       const v = res.ai?.verdict
       if (v === 'MORPHED') {
@@ -241,6 +255,45 @@ export function ReportDetail({
         <p className="text-sm leading-relaxed text-muted-foreground">{report.description}</p>
 
         <WorkflowSteps report={report} />
+
+        {/* Settlement / Payment Info */}
+        {report.paymentMethod && (
+          <div className="rounded-lg border bg-card p-3 space-y-1.5 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="font-bold flex items-center gap-1.5">
+                <HandCoins className="h-4 w-4 text-emerald-500" />
+                Payment: {report.paymentMethod === 'ONLINE_QR' ? 'Dynamic Online QR Code' : 'Cash on Delivery'}
+              </span>
+              <Pill label={report.paymentStatus || 'PAID'} className={STATUS_STYLES.RESOLVED} />
+            </div>
+            <div className="flex items-center justify-between text-muted-foreground pt-1">
+              <span>Amount: ₹{(report.paymentAmount || 500).toLocaleString('en-IN')}</span>
+              {report.paymentTxnId && <span className="font-mono text-[10px]">Ref: {report.paymentTxnId}</span>}
+            </div>
+          </div>
+        )}
+
+        {/* Rate Technician section */}
+        {report.status === 'RESOLVED' && (
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div>
+              <p className="font-bold flex items-center gap-1.5 text-foreground">
+                <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
+                Rate Maintenance Technician: {report.assignedTo ?? 'Technician'}
+              </p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Submit user feedback with phone verification consent. Approved ratings boost worker rankings.
+              </p>
+            </div>
+            <Button
+              size="sm"
+              className="bg-amber-600 hover:bg-amber-700 text-white font-bold gap-1 text-xs"
+              onClick={() => setRatingModalOpen(true)}
+            >
+              <Star className="h-3.5 w-3.5 fill-white" /> Rate Technician
+            </Button>
+          </div>
+        )}
 
         {/* Original fault photo */}
         <PhotoBox
@@ -357,27 +410,151 @@ export function ReportDetail({
           </div>
         )}
 
-        {/* ── STEP 2: maintenance proof upload ── */}
+        {/* ── STEP 2: maintenance proof upload & payment ── */}
         {isMaint && ['APPROVED', 'IN_PROGRESS'].includes(report.status) && (
           <div className="space-y-3 rounded-lg border border-sky-500/30 bg-sky-500/5 p-3">
-            <p className="flex items-center gap-1.5 text-xs font-semibold"><Camera className="h-3.5 w-3.5" /> Step 2 — Work complete? Upload proof photo for AI audit</p>
+            <p className="flex items-center gap-1.5 text-xs font-semibold">
+              <Camera className="h-3.5 w-3.5" /> Step 2 — Work Complete: Proof of Work &amp; Payment
+            </p>
             <p className="text-[11px] text-muted-foreground">
-              The AI engine will check the photo for morphing / manipulation. A manipulated upload auto-rejects the work and issues a fine.
+              Upload video/photo as proof of work. The AI engine checks uploads for tampering/morphing. Choose payment via Cash or dynamic online QR code.
             </p>
             {report.status === 'APPROVED' && (
               <Button size="sm" variant="outline" disabled={busy} onClick={() => act(`/api/maintenance/${report.id}`, { status: 'IN_PROGRESS', note: 'Repair started' }, 'Repair started')}>
                 <PlayCircle className="h-3.5 w-3.5" /> Start repair
               </Button>
             )}
-            <div className="grid gap-3 sm:grid-cols-2">
-              <ProofPicker value={proofFile} onChange={setProofFile} label="After-work proof photo * (JPG/PNG)" />
-              <div className="space-y-1.5">
-                <Label htmlFor="pf-note" className="text-[11px] text-muted-foreground">Work note</Label>
-                <Textarea id="pf-note" rows={3} value={proofNote} onChange={(e) => setProofNote(e.target.value)} placeholder="e.g. Replaced ballast, tested for 30 minutes" className="text-sm" />
+
+            {/* Proof Type Toggle: Photo vs Video */}
+            <div className="flex items-center gap-2 pt-1">
+              <span className="text-xs font-bold text-foreground">Proof Type:</span>
+              <div className="flex items-center rounded-lg border bg-muted/40 p-0.5 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setProofType('photo')}
+                  className={cn('px-2.5 py-1 rounded font-semibold transition-all', proofType === 'photo' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground')}
+                >
+                  <Camera className="h-3 w-3 inline mr-1" /> Photo Proof
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setProofType('video')}
+                  className={cn('px-2.5 py-1 rounded font-semibold transition-all', proofType === 'video' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground')}
+                >
+                  <Video className="h-3 w-3 inline mr-1" /> Video Proof
+                </button>
               </div>
             </div>
-            <Button size="sm" disabled={aiBusy || !proofFile} onClick={() => submitWithAi(`/api/maintenance/${report.id}/proof`, proofFile?.data, proofNote, 'Proof submitted')} className="bg-purple-600 hover:bg-purple-700 text-white">
-              {aiBusy ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> AI analysing photo…</> : <><Sparkles className="h-3.5 w-3.5" /> Submit proof for AI verification</>}
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              {proofType === 'photo' ? (
+                <ProofPicker value={proofFile} onChange={setProofFile} label="After-work proof photo * (JPG/PNG)" />
+              ) : (
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] text-muted-foreground">Video Proof File / Link *</Label>
+                  <Input
+                    value={videoProof}
+                    onChange={(e) => setVideoProof(e.target.value)}
+                    placeholder="Enter video proof data URL or media link..."
+                    className="text-xs h-9"
+                  />
+                  <p className="text-[10px] text-muted-foreground">Direct video capture verification enabled</p>
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <Label htmlFor="pf-note" className="text-[11px] text-muted-foreground">Work note</Label>
+                <Textarea id="pf-note" rows={3} value={proofNote} onChange={(e) => setProofNote(e.target.value)} placeholder="e.g. Replaced faulty component, tested on-site for 30 minutes" className="text-sm" />
+              </div>
+            </div>
+
+            {/* Payment Method Section: Cash vs Newly Generated Dynamic QR Code */}
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-emerald-800 dark:text-emerald-400 flex items-center gap-1.5">
+                  <HandCoins className="h-4 w-4" /> Settlement &amp; Payment Method
+                </span>
+                <div className="flex items-center rounded-lg border bg-card p-0.5 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMode('CASH')}
+                    className={cn('px-2.5 py-1 rounded font-semibold transition-all', paymentMode === 'CASH' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground')}
+                  >
+                    Cash
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPaymentMode('ONLINE_QR')
+                      setTxnId(`TXN-${Date.now()}`)
+                    }}
+                    className={cn('px-2.5 py-1 rounded font-semibold transition-all', paymentMode === 'ONLINE_QR' ? 'bg-emerald-600 text-white shadow-sm' : 'text-muted-foreground')}
+                  >
+                    Dynamic Online QR
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="space-y-1 w-32">
+                  <Label className="text-[11px] text-muted-foreground">Bill Amount (₹)</Label>
+                  <Input
+                    type="number"
+                    value={paymentAmount}
+                    onChange={(e) => setPaymentAmount(Number(e.target.value))}
+                    className="text-xs h-8"
+                  />
+                </div>
+                {paymentMode === 'CASH' ? (
+                  <p className="text-[11px] text-muted-foreground pt-4">
+                    Cash settlement: Collect ₹{paymentAmount} directly from resident upon completion.
+                  </p>
+                ) : (
+                  <div className="flex-1 flex flex-wrap items-center gap-3 pt-2">
+                    <img
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(`upi://pay?pa=facility.omniguard@upi&pn=BuildingFacilities&am=${paymentAmount}&tr=${txnId}`)}`}
+                      alt="Fresh UPI Payment QR Code"
+                      className="h-20 w-20 border rounded-lg bg-white p-1 shadow-sm shrink-0"
+                    />
+                    <div className="text-xs space-y-1 min-w-0">
+                      <p className="font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
+                        <QrCode className="h-3.5 w-3.5" /> Newly Generated Dynamic QR
+                      </p>
+                      <p className="font-mono text-[10px] text-muted-foreground truncate">Ref: {txnId}</p>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={paymentPaid ? 'default' : 'outline'}
+                        className={cn('h-6 text-[11px] gap-1', paymentPaid ? 'bg-emerald-600 text-white' : 'border-emerald-500/40 text-emerald-700')}
+                        onClick={() => setPaymentPaid((v) => !v)}
+                      >
+                        <Check className="h-3 w-3" /> {paymentPaid ? 'Payment Received' : 'Mark Online Paid'}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <Button
+              size="sm"
+              disabled={aiBusy || (proofType === 'photo' ? !proofFile : !videoProof)}
+              onClick={() => submitWithAi(
+                `/api/maintenance/${report.id}/proof`,
+                proofType === 'video' ? videoProof : proofFile?.data,
+                proofNote,
+                'Proof submitted',
+                {
+                  proofType,
+                  paymentMethod: paymentMode,
+                  paymentAmount,
+                  paymentTxnId: paymentMode === 'ONLINE_QR' ? txnId : undefined,
+                  paymentStatus: paymentPaid || paymentMode === 'CASH' ? 'PAID' : 'PENDING',
+                }
+              )}
+              className="bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              {aiBusy ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> AI analysing proof…</> : <><Sparkles className="h-3.5 w-3.5" /> Submit proof &amp; payment for AI verification</>}
             </Button>
           </div>
         )}
@@ -481,6 +658,16 @@ export function ReportDetail({
             Repair status updates are performed by the maintenance team{report.assignedTo ? ` — currently assigned to ${report.assignedTo}` : ''}.
           </p>
         )}
+
+        <WorkerRatingModal
+          open={ratingModalOpen}
+          onClose={() => setRatingModalOpen(false)}
+          report={report}
+          user={user}
+          onRated={() => {
+            onChanged()
+          }}
+        />
       </DialogContent>
     </Dialog>
   )
@@ -545,5 +732,191 @@ function ProofPicker({ value, onChange, label }: {
         title="Capture Verification Proof"
       />
     </div>
+  )
+}
+
+function WorkerRatingModal({
+  open,
+  onClose,
+  report,
+  user,
+  onRated,
+}: {
+  open: boolean
+  onClose: () => void
+  report: MaintenanceReport
+  user: { name: string; phone?: string | null }
+  onRated: () => void
+}) {
+  const [stars, setStars] = useState(5)
+  const [quality, setQuality] = useState(5)
+  const [timeliness, setTimeliness] = useState(5)
+  const [cleanliness, setCleanliness] = useState(5)
+  const [phone, setPhone] = useState(user.phone || '+91 98765-43210')
+  const [consent, setConsent] = useState(false)
+  const [feedback, setFeedback] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  const submitRating = async () => {
+    if (!consent) {
+      toast.error('You must consent to the phone verification policy before submitting a rating.')
+      return
+    }
+    if (!phone.trim() || phone.trim().length < 8) {
+      toast.error('Please enter a valid phone number for administrative verification.')
+      return
+    }
+    setSubmitting(true)
+    try {
+      await api('/api/ratings', {
+        method: 'POST',
+        json: {
+          reportId: report.id,
+          workerName: report.assignedTo || 'Assigned Technician',
+          workerCategory: report.category,
+          stars,
+          feedback: feedback.trim(),
+          workQualityScore: quality,
+          timelinessScore: timeliness,
+          cleanlinessScore: cleanliness,
+          userPhone: phone.trim(),
+          phoneConsentGiven: consent,
+        },
+      })
+      toast.success('Rating submitted! Held in pending state for Administrative review & verification call.')
+      onRated()
+      onClose()
+    } catch (e) {
+      toast.error((e as Error).message)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-base">
+            <Star className="h-5 w-5 text-amber-500 fill-amber-500" />
+            Rate Technician: {report.assignedTo ?? 'Technician'}
+          </DialogTitle>
+          <DialogDescription className="text-xs">
+            Your review boosts the worker&apos;s recommendations. Please provide genuine details.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-2 text-xs">
+          {/* Policy Consent Screen */}
+          <div className="rounded-xl border border-sky-500/30 bg-sky-500/5 p-3 space-y-2 text-sky-900 dark:text-sky-300">
+            <p className="font-bold flex items-center gap-1.5 text-xs">
+              <ShieldAlert className="h-4 w-4 text-sky-600" />
+              Phone Privacy &amp; Verification Policy
+            </p>
+            <p className="text-[11px] leading-relaxed opacity-90">
+              To prevent false or exaggerated reviews and protect technician livelihoods, your phone number is used strictly for an automated in-app administrative verification call. Unverified or false ratings are rejected with account warnings.
+            </p>
+            <label className="flex items-start gap-2 pt-1 cursor-pointer font-semibold text-xs text-foreground">
+              <input
+                type="checkbox"
+                checked={consent}
+                onChange={(e) => setConsent(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+              />
+              <span>I agree to the phone verification policy and confirm this review is accurate.</span>
+            </label>
+          </div>
+
+          {/* User Phone */}
+          <div className="space-y-1">
+            <Label className="text-xs font-semibold">Contact Phone Number * (for Verification Call)</Label>
+            <Input
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="+91 98765-43210"
+              className="text-xs h-9 font-mono"
+            />
+          </div>
+
+          {/* Overall Stars */}
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Overall Rating</Label>
+            <div className="flex items-center gap-2">
+              {[1, 2, 3, 4, 5].map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setStars(s)}
+                  className="p-1 hover:scale-110 transition-transform"
+                >
+                  <Star
+                    className={cn(
+                      'h-6 w-6',
+                      s <= stars ? 'text-amber-500 fill-amber-500' : 'text-muted-foreground'
+                    )}
+                  />
+                </button>
+              ))}
+              <span className="font-bold ml-2 text-sm">{stars} / 5</span>
+            </div>
+          </div>
+
+          {/* Breakdown selects */}
+          <div className="grid grid-cols-3 gap-2">
+            <div className="space-y-1">
+              <Label className="text-[11px]">Work Quality</Label>
+              <Select value={String(quality)} onValueChange={(v) => setQuality(Number(v))}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {[5, 4, 3, 2, 1].map((n) => <SelectItem key={n} value={String(n)}>{n} ★</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[11px]">Punctuality</Label>
+              <Select value={String(timeliness)} onValueChange={(v) => setTimeliness(Number(v))}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {[5, 4, 3, 2, 1].map((n) => <SelectItem key={n} value={String(n)}>{n} ★</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[11px]">Cleanliness</Label>
+              <Select value={String(cleanliness)} onValueChange={(v) => setCleanliness(Number(v))}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {[5, 4, 3, 2, 1].map((n) => <SelectItem key={n} value={String(n)}>{n} ★</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Detailed Feedback */}
+          <div className="space-y-1">
+            <Label className="text-xs font-semibold">Review &amp; Feedback Details</Label>
+            <Textarea
+              rows={3}
+              value={feedback}
+              onChange={(e) => setFeedback(e.target.value)}
+              placeholder="Describe how the work was carried out, timeliness, and behavior..."
+              className="text-xs"
+            />
+          </div>
+        </div>
+
+        <DialogFooter className="gap-2">
+          <Button variant="outline" size="sm" onClick={onClose} disabled={submitting}>Cancel</Button>
+          <Button
+            size="sm"
+            onClick={submitRating}
+            disabled={submitting || !consent || !phone}
+            className="bg-amber-600 hover:bg-amber-700 text-white font-bold"
+          >
+            {submitting ? 'Submitting…' : 'Submit Rating for Review'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

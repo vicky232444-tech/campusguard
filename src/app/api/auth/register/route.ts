@@ -4,8 +4,8 @@ import { hashPassword, signToken } from '@/lib/password'
 import type { Role } from '@/lib/permissions'
 
 const ROLE_COLORS: Record<string, string> = {
+  USER: '#10b981',
   STUDENT: '#10b981',
-  STAFF: '#14b8a6',
   SECURITY: '#f59e0b',
   MAINTENANCE: '#8b5cf6',
   ADMIN: '#ef4444',
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: 'Password must be at least 6 characters long' }, { status: 400 })
   }
 
-  const allowedRoles = ['STUDENT', 'STAFF', 'SECURITY', 'MAINTENANCE', 'ADMIN']
+  const allowedRoles = ['USER', 'STUDENT', 'SECURITY', 'MAINTENANCE', 'ADMIN']
   const finalRole = allowedRoles.includes(role) ? role : 'STUDENT'
 
   try {

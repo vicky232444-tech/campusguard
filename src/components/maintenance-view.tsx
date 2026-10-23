@@ -1,13 +1,13 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useRef, useState, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { api } from '@/lib/api'
 import { useUserStore } from '@/lib/user-store'
 import { can } from '@/lib/permissions'
-import type { MaintenanceReport, ReportStatus } from '@/lib/types'
-import { ZONES } from '@/lib/types'
+import type { MaintenanceReport, ReportStatus, StudentVerification, WorkerRating, SuspensionAppeal } from '@/lib/types'
+import { ZONES, BUILDING_ZONES_CONFIG } from '@/lib/types'
 import { useI18n } from '@/lib/i18n'
 import { useOfflineSync } from '@/lib/offline-sync'
 import { Pill, STATUS_STYLES, relTime, dateTimeStr } from '@/components/shared'
@@ -23,9 +23,9 @@ import { CameraCaptureModal } from '@/components/camera-capture-modal'
 import {
   AirVent, Armchair, Camera, CheckCircle2, CircleDot, Cog, Droplets, HandCoins,
   SearchCheck, ShieldCheck, Wrench, X, Zap, UserCheck, PhoneCall, Sparkles, Upload,
-  Clock, Search, UserPlus, ShieldAlert, Check, AlertCircle, FileText
+  Clock, Search, UserPlus, ShieldAlert, Check, AlertCircle, FileText, Star, PhoneIncoming,
+  RotateCcw, CheckCircle, Ban, AlertOctagon
 } from 'lucide-react'
-import type { StudentVerification } from '@/lib/types'
 
 export const FIELD_TECHNICIANS: Record<string, { name: string; title: string; phone: string; rating: string }[]> = {
   ELECTRICAL: [
@@ -88,9 +88,11 @@ export function MaintenanceView() {
   const queryClient = useQueryClient()
   const { lang, t } = useI18n()
 
-  const [activeTab, setActiveTab] = useState<'repairs' | 'students'>('repairs')
+  const [activeTab, setActiveTab] = useState<'repairs' | 'students' | 'ratings' | 'appeals'>('repairs')
   const [detailId, setDetailId] = useState<string | null>(null)
   const [filterPriority, setFilterPriority] = useState<string>('ALL')
+
+  const isAdmin = user?.role === 'ADMIN'
 
   const { data: verifData } = useQuery({
     queryKey: ['student-verifications'],
@@ -98,6 +100,24 @@ export function MaintenanceView() {
     refetchInterval: 12000,
   })
   const studentRecords = verifData?.records ?? []
+
+  const { data: ratingsData } = useQuery({
+    queryKey: ['worker-ratings'],
+    queryFn: () => api<{ ratings: WorkerRating[] }>('/api/ratings'),
+    enabled: isAdmin,
+    refetchInterval: 10000,
+  })
+  const ratings = ratingsData?.ratings ?? []
+  const pendingRatingsCount = ratings.filter((r) => r.status === 'PENDING_ADMIN_REVIEW' || r.status === 'CALL_VERIFIED').length
+
+  const { data: appealsData } = useQuery({
+    queryKey: ['suspension-appeals'],
+    queryFn: () => api<{ appeals: SuspensionAppeal[] }>('/api/users/appeals'),
+    enabled: isAdmin,
+    refetchInterval: 10000,
+  })
+  const appeals = appealsData?.appeals ?? []
+  const pendingAppealsCount = appeals.filter((a) => a.status === 'PENDING').length
 
   const { data: reportsData } = useQuery({
     queryKey: ['maintenance'],
@@ -111,8 +131,8 @@ export function MaintenanceView() {
 
   return (
     <div className="space-y-5">
-      {/* Top Tab Switcher: Repairs vs Student Records & Verification */}
-      <div className="flex items-center gap-2 border-b pb-2">
+      {/* Top Tab Switcher: Repairs vs Student Records vs Ratings vs Appeals */}
+      <div className="flex flex-wrap items-center gap-2 border-b pb-2">
         <button
           onClick={() => setActiveTab('repairs')}
           className={cn(
@@ -123,8 +143,9 @@ export function MaintenanceView() {
           )}
         >
           <Wrench className="h-4 w-4" />
-          {lang === 'hi' ? 'शिकायतें व मरम्मत कार्य' : 'Campus Repairs & Complaints'}
+          {lang === 'hi' ? 'शिकायतें व मरम्मत कार्य' : 'Building Repairs & Complaints'}
         </button>
+
         <button
           onClick={() => setActiveTab('students')}
           className={cn(
@@ -135,17 +156,61 @@ export function MaintenanceView() {
           )}
         >
           <UserCheck className="h-4 w-4" />
-          {lang === 'hi' ? 'विद्यार्थी सत्यापन व रिकॉर्ड्स' : 'Student Verification & Records'}
+          {lang === 'hi' ? 'पहचान / छात्र सत्यापन' : 'Identity / Student Verification'}
           {studentRecords.length > 0 && (
             <span className="rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 px-1.5 py-0.2 text-[10px] font-mono">
               {studentRecords.length}
             </span>
           )}
         </button>
+
+        {isAdmin && (
+          <>
+            <button
+              onClick={() => setActiveTab('ratings')}
+              className={cn(
+                'flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all',
+                activeTab === 'ratings'
+                  ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30'
+                  : 'text-muted-foreground hover:bg-muted'
+              )}
+            >
+              <Star className="h-4 w-4 text-amber-500" />
+              <span>Worker Ratings Review</span>
+              {pendingRatingsCount > 0 && (
+                <span className="rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-400 px-1.5 py-0.2 text-[10px] font-mono">
+                  {pendingRatingsCount}
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => setActiveTab('appeals')}
+              className={cn(
+                'flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all',
+                activeTab === 'appeals'
+                  ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30'
+                  : 'text-muted-foreground hover:bg-muted'
+              )}
+            >
+              <AlertOctagon className="h-4 w-4 text-red-500" />
+              <span>Suspension Appeals</span>
+              {pendingAppealsCount > 0 && (
+                <span className="rounded-full bg-red-500/20 text-red-700 dark:text-red-400 px-1.5 py-0.2 text-[10px] font-mono">
+                  {pendingAppealsCount}
+                </span>
+              )}
+            </button>
+          </>
+        )}
       </div>
 
       {activeTab === 'students' ? (
         <StudentVerificationSection />
+      ) : activeTab === 'ratings' ? (
+        <AdminRatingsSection />
+      ) : activeTab === 'appeals' ? (
+        <AdminAppealsSection />
       ) : (
         <>
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -255,6 +320,9 @@ function ReportDialog({ onDone }: { onDone: () => void }) {
   const { lang, t } = useI18n()
   const { isOnline, addOfflineReport } = useOfflineSync()
 
+  const defaultZone = Object.keys(BUILDING_ZONES_CONFIG)[0] || 'Residential & Inpatient Block A'
+  const defaultPlaces = BUILDING_ZONES_CONFIG[defaultZone]?.places || []
+
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [cameraModalOpen, setCameraModalOpen] = useState(false)
@@ -262,8 +330,9 @@ function ReportDialog({ onDone }: { onDone: () => void }) {
     category: 'ELECTRICAL',
     title: '',
     description: '',
-    zone: 'Academic Block A',
-    location: '',
+    zone: defaultZone,
+    exactPlace: defaultPlaces[0] || '',
+    location: defaultPlaces[0] || '',
     priority: 'MEDIUM',
     assignedTo: '',
   })
@@ -271,7 +340,15 @@ function ReportDialog({ onDone }: { onDone: () => void }) {
   const [photoNote, setPhotoNote] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
-  const activeTechs = FIELD_TECHNICIANS[form.category] ?? []
+  // Rank technicians by rating score (highest-rated shown first in each department)
+  const activeTechs = useMemo(() => {
+    const list = [...(FIELD_TECHNICIANS[form.category] ?? [])]
+    return list.sort((a, b) => {
+      const scoreA = parseFloat(a.rating) || 0
+      const scoreB = parseFloat(b.rating) || 0
+      return scoreB - scoreA
+    })
+  }, [form.category])
 
   const onFile = async (f: File | undefined) => {
     if (!f) return
@@ -301,7 +378,16 @@ function ReportDialog({ onDone }: { onDone: () => void }) {
     try {
       await api('/api/maintenance', { method: 'POST', json: payload })
       toast.success(lang === 'hi' ? 'शिकायत सफलतापूर्वक दर्ज की गई!' : 'Fault reported successfully!')
-      setForm({ category: 'ELECTRICAL', title: '', description: '', zone: 'Academic Block A', location: '', priority: 'MEDIUM', assignedTo: '' })
+      setForm({
+        category: 'ELECTRICAL',
+        title: '',
+        description: '',
+        zone: defaultZone,
+        exactPlace: defaultPlaces[0] || '',
+        location: defaultPlaces[0] || '',
+        priority: 'MEDIUM',
+        assignedTo: '',
+      })
       setPhoto(null)
       setPhotoNote(null)
       setOpen(false)
@@ -419,26 +505,38 @@ function ReportDialog({ onDone }: { onDone: () => void }) {
               />
             </div>
 
-            {/* Zone & Location */}
+            {/* Cascading Building / Zone & Exact Place Selection */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Zone *</Label>
-                <Select value={form.zone} onValueChange={(v) => setForm({ ...form, zone: v })}>
+                <Label className="text-xs font-semibold">Building / Zone *</Label>
+                <Select
+                  value={form.zone}
+                  onValueChange={(v) => {
+                    const places = BUILDING_ZONES_CONFIG[v]?.places || []
+                    setForm({ ...form, zone: v, exactPlace: places[0] || '', location: places[0] || '' })
+                  }}
+                >
                   <SelectTrigger className="h-10 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {ZONES.map((z) => <SelectItem key={z} value={z}>{z}</SelectItem>)}
+                    {Object.keys(BUILDING_ZONES_CONFIG).map((z) => (
+                      <SelectItem key={z} value={z}>{z}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="r-loc" className="text-xs font-semibold">Exact Room / Spot</Label>
-                <Input
-                  id="r-loc"
-                  value={form.location}
-                  onChange={(e) => setForm({ ...form, location: e.target.value })}
-                  placeholder="e.g. Lab 204 / 2nd Floor Corridor"
-                  className="text-xs h-10"
-                />
+                <Label className="text-xs font-semibold">Exact Place within Building *</Label>
+                <Select
+                  value={form.exactPlace || (BUILDING_ZONES_CONFIG[form.zone]?.places?.[0] ?? '')}
+                  onValueChange={(v) => setForm({ ...form, exactPlace: v, location: v })}
+                >
+                  <SelectTrigger className="h-10 text-xs"><SelectValue placeholder="Select exact area" /></SelectTrigger>
+                  <SelectContent>
+                    {(BUILDING_ZONES_CONFIG[form.zone]?.places || []).map((p) => (
+                      <SelectItem key={p} value={p}>{p}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -886,6 +984,397 @@ function StudentVerificationSection() {
                 <p className="text-[11px] text-muted-foreground italic px-1">
                   Note: {student.remarks}
                 </p>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  )
+}
+
+function AdminRatingsSection() {
+  const queryClient = useQueryClient()
+  const [filterStatus, setFilterStatus] = useState<string>('ALL')
+  const [rejectModalOpen, setRejectModalOpen] = useState(false)
+  const [rejectRatingId, setRejectRatingId] = useState<string | null>(null)
+  const [rejectReason, setRejectReason] = useState('')
+  const [acting, setActing] = useState(false)
+
+  const { data } = useQuery({
+    queryKey: ['worker-ratings'],
+    queryFn: () => api<{ ratings: WorkerRating[] }>('/api/ratings'),
+    refetchInterval: 8000,
+  })
+  const ratings = data?.ratings ?? []
+
+  const filtered = ratings.filter((r) => filterStatus === 'ALL' || r.status === filterStatus)
+
+  const handleSimulateCall = async (id: string) => {
+    setActing(true)
+    try {
+      const res = await api<{ rating: WorkerRating; simulatedTranscript: string }>(`/api/ratings/${id}/verify-call`, {
+        method: 'POST',
+      })
+      toast.success('Automated verification call placed to user!', {
+        description: res.simulatedTranscript,
+        duration: 8000,
+      })
+      queryClient.invalidateQueries({ queryKey: ['worker-ratings'] })
+    } catch (e) {
+      toast.error((e as Error).message)
+    } finally {
+      setActing(false)
+    }
+  }
+
+  const handleApprove = async (id: string) => {
+    setActing(true)
+    try {
+      await api(`/api/ratings/${id}/approve`, { method: 'POST', json: { adminNotes: 'Verified genuine by Admin' } })
+      toast.success('Rating approved and passed to technician recommendation engine!')
+      queryClient.invalidateQueries({ queryKey: ['worker-ratings'] })
+    } catch (e) {
+      toast.error((e as Error).message)
+    } finally {
+      setActing(false)
+    }
+  }
+
+  const handleOpenReject = (id: string) => {
+    setRejectRatingId(id)
+    setRejectReason('')
+    setRejectModalOpen(true)
+  }
+
+  const submitReject = async () => {
+    if (!rejectRatingId || !rejectReason.trim()) {
+      toast.error('Rejection reason is required')
+      return
+    }
+    setActing(true)
+    try {
+      const res = await api<{ rating: WorkerRating; warningCount: number; isSuspended: boolean }>(`/api/ratings/${rejectRatingId}/reject`, {
+        method: 'POST',
+        json: { rejectionReason: rejectReason.trim() },
+      })
+      if (res.isSuspended) {
+        toast.error(`Rating rejected. User received 3rd warning and account was TEMPORARILY SUSPENDED.`, { duration: 8000 })
+      } else {
+        toast.warning(`Rating rejected as false. User received warning #${res.warningCount} of 3.`, { duration: 6000 })
+      }
+      setRejectModalOpen(false)
+      queryClient.invalidateQueries({ queryKey: ['worker-ratings'] })
+    } catch (e) {
+      toast.error((e as Error).message)
+    } finally {
+      setActing(false)
+    }
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-base font-extrabold flex items-center gap-2">
+            <Star className="h-5 w-5 text-amber-500 fill-amber-500" />
+            Maintenance Worker Ratings &amp; Anti-Fraud Review
+          </h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Admin review flow: Verify submitted details for accuracy. Use automated verification call if in doubt. 3 false ratings within 6 months triggers temporary user suspension.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-1.5">
+          {(['ALL', 'PENDING_ADMIN_REVIEW', 'CALL_VERIFIED', 'APPROVED', 'REJECTED_FALSE'] as const).map((status) => (
+            <button
+              key={status}
+              onClick={() => setFilterStatus(status)}
+              className={cn(
+                'px-2.5 py-1 rounded-lg text-xs font-semibold transition-all',
+                filterStatus === status
+                  ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30'
+                  : 'text-muted-foreground hover:bg-muted'
+              )}
+            >
+              {status.replaceAll('_', ' ')}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        {filtered.length === 0 ? (
+          <div className="rounded-2xl border border-dashed p-8 text-center text-xs text-muted-foreground">
+            No worker ratings matching filter.
+          </div>
+        ) : (
+          filtered.map((r) => (
+            <div key={r.id} className="rounded-2xl border bg-card p-4 shadow-sm hover:shadow-md transition-all space-y-3">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
+                      {r.reportCode}
+                    </span>
+                    <h3 className="text-sm font-bold">Worker: {r.workerName} ({r.workerCategory})</h3>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Rated by <b>{r.userName}</b> · Phone: <span className="font-mono font-semibold">{r.userPhone}</span> {r.phoneConsentGiven && <span className="text-emerald-600 font-medium">(Consent on record)</span>}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 px-2.5 py-1 rounded-full text-xs font-bold">
+                    <Star className="h-3.5 w-3.5 fill-amber-500" />
+                    <span>{r.stars} / 5</span>
+                  </div>
+                  <Pill label={r.status.replaceAll('_', ' ')} className={r.status === 'APPROVED' ? STATUS_STYLES.RESOLVED : r.status === 'REJECTED_FALSE' ? STATUS_STYLES.REJECTED : STATUS_STYLES.PENDING} />
+                </div>
+              </div>
+
+              {/* Breakdown metrics */}
+              <div className="grid grid-cols-3 gap-2 text-xs bg-muted/30 p-2.5 rounded-xl border">
+                <div>
+                  <span className="text-muted-foreground">Work Quality:</span> <b className="text-foreground">{r.workQualityScore}/5</b>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Punctuality:</span> <b className="text-foreground">{r.timelinessScore}/5</b>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Cleanliness:</span> <b className="text-foreground">{r.cleanlinessScore}/5</b>
+                </div>
+              </div>
+
+              {r.feedback && (
+                <p className="text-xs text-foreground bg-card p-2 rounded-lg border italic">
+                  &ldquo;{r.feedback}&rdquo;
+                </p>
+              )}
+
+              {/* Call Verification Log / Transcript */}
+              {r.verificationCallNotes && (
+                <div className="rounded-lg border border-sky-500/30 bg-sky-500/5 p-2.5 text-xs text-sky-800 dark:text-sky-300">
+                  <p className="font-bold flex items-center gap-1.5">
+                    <PhoneIncoming className="h-3.5 w-3.5" /> Automated Verification Call Transcript:
+                  </p>
+                  <p className="mt-1 text-[11px] font-mono whitespace-pre-wrap">{r.verificationCallNotes}</p>
+                </div>
+              )}
+
+              {r.rejectionReason && (
+                <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-2 text-xs text-red-700 dark:text-red-400">
+                  <b>Rejection Reason (Warning Issued):</b> {r.rejectionReason}
+                </div>
+              )}
+
+              {/* Admin Action Buttons */}
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t text-xs">
+                <span className="text-muted-foreground text-[11px]">Submitted {relTime(r.createdAt)}</span>
+                <div className="flex items-center gap-2">
+                  {r.status !== 'APPROVED' && r.status !== 'REJECTED_FALSE' && (
+                    <>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 text-xs border-sky-500/40 text-sky-700 dark:text-sky-300 hover:bg-sky-500/10 font-bold gap-1.5"
+                        onClick={() => handleSimulateCall(r.id)}
+                        disabled={acting}
+                      >
+                        <PhoneCall className="h-3.5 w-3.5" /> Automated Verification Call
+                      </Button>
+
+                      <Button
+                        size="sm"
+                        className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-1.5"
+                        onClick={() => handleApprove(r.id)}
+                        disabled={acting}
+                      >
+                        <Check className="h-3.5 w-3.5" /> Approve Rating
+                      </Button>
+
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 text-xs border-red-500/40 text-red-600 hover:bg-red-500/10 font-bold gap-1.5"
+                        onClick={() => handleOpenReject(r.id)}
+                        disabled={acting}
+                      >
+                        <Ban className="h-3.5 w-3.5" /> Reject as False
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Reject Dialog */}
+      <Dialog open={rejectModalOpen} onOpenChange={setRejectModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <Ban className="h-5 w-5" /> Reject Rating as False / Exaggerated
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Every false rating issues a formal warning to the user. After 3 warnings in 6 months, the account is temporarily suspended.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2 text-xs">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Rejection Reason *</Label>
+              <Textarea
+                rows={3}
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                placeholder="e.g. Details do not match the assigned work order or user denied rating on verification call..."
+                className="text-xs"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" size="sm" onClick={() => setRejectModalOpen(false)}>Cancel</Button>
+            <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white font-bold" onClick={submitReject} disabled={acting}>
+              {acting ? 'Processing…' : 'Confirm Rejection & Issue Warning'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
+
+function AdminAppealsSection() {
+  const queryClient = useQueryClient()
+  const [filterStatus, setFilterStatus] = useState<string>('ALL')
+  const [acting, setActing] = useState(false)
+
+  const { data } = useQuery({
+    queryKey: ['suspension-appeals'],
+    queryFn: () => api<{ appeals: SuspensionAppeal[] }>('/api/users/appeals'),
+    refetchInterval: 8000,
+  })
+  const appeals = data?.appeals ?? []
+  const filtered = appeals.filter((a) => filterStatus === 'ALL' || a.status === filterStatus)
+
+  const handleReview = async (id: string, decision: 'APPROVE' | 'REJECT') => {
+    setActing(true)
+    try {
+      await api(`/api/users/appeals/${id}/review`, {
+        method: 'POST',
+        json: {
+          decision,
+          adminNotes: decision === 'APPROVE' ? 'Account reinstated after evidence review.' : 'Appeal rejected due to lack of proof.',
+        },
+      })
+      if (decision === 'APPROVE') {
+        toast.success('Appeal approved! User account has been REINSTATED.')
+      } else {
+        toast.info('Appeal declined.')
+      }
+      queryClient.invalidateQueries({ queryKey: ['suspension-appeals'] })
+    } catch (e) {
+      toast.error((e as Error).message)
+    } finally {
+      setActing(false)
+    }
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-base font-extrabold flex items-center gap-2">
+            <AlertOctagon className="h-5 w-5 text-red-500" />
+            User Suspension Appeals &amp; Account Reinstatement
+          </h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Review written explanations and uploaded proof photos/videos from suspended users. Approving an appeal immediately lifts the suspension and clears the warning counter.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-1.5">
+          {(['ALL', 'PENDING', 'APPROVED', 'REJECTED'] as const).map((status) => (
+            <button
+              key={status}
+              onClick={() => setFilterStatus(status)}
+              className={cn(
+                'px-2.5 py-1 rounded-lg text-xs font-semibold transition-all',
+                filterStatus === status
+                  ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30'
+                  : 'text-muted-foreground hover:bg-muted'
+              )}
+            >
+              {status}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        {filtered.length === 0 ? (
+          <div className="rounded-2xl border border-dashed p-8 text-center text-xs text-muted-foreground">
+            No suspension appeals found.
+          </div>
+        ) : (
+          filtered.map((a) => (
+            <div key={a.id} className="rounded-2xl border bg-card p-4 shadow-sm hover:shadow-md transition-all space-y-3">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-bold">{a.userName} ({a.userEmail})</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Phone: <span className="font-mono">{a.userPhone || '—'}</span> · Submitted {dateTimeStr(a.createdAt)}
+                  </p>
+                </div>
+                <Pill label={a.status} className={a.status === 'APPROVED' ? STATUS_STYLES.RESOLVED : a.status === 'REJECTED' ? STATUS_STYLES.REJECTED : STATUS_STYLES.PENDING} />
+              </div>
+
+              <div className="space-y-1.5 bg-muted/30 p-3 rounded-xl border text-xs">
+                <p className="font-bold text-foreground">User Explanation:</p>
+                <p className="text-muted-foreground leading-relaxed">{a.explanation}</p>
+              </div>
+
+              {a.proofMedia && (
+                <div className="space-y-1.5">
+                  <p className="text-xs font-bold text-foreground">Attached Proof Media:</p>
+                  {a.proofMedia.startsWith('data:image') || a.proofMedia.startsWith('http') ? (
+                    <img src={a.proofMedia} alt="Appeal proof" className="max-h-48 rounded-lg border object-cover" />
+                  ) : (
+                    <p className="text-xs text-emerald-600 font-mono underline">{a.proofMedia}</p>
+                  )}
+                </div>
+              )}
+
+              {a.adminNotes && (
+                <p className="text-xs text-muted-foreground italic">
+                  Admin Verdict: {a.adminNotes} (by {a.reviewedBy || 'Admin'})
+                </p>
+              )}
+
+              {a.status === 'PENDING' && (
+                <div className="flex items-center justify-end gap-2 pt-2 border-t">
+                  <Button
+                    size="sm"
+                    className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-1.5"
+                    onClick={() => handleReview(a.id, 'APPROVE')}
+                    disabled={acting}
+                  >
+                    <CheckCircle className="h-3.5 w-3.5" /> Approve &amp; Reinstate Account
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 text-xs border-red-500/40 text-red-600 hover:bg-red-500/10 font-bold"
+                    onClick={() => handleReview(a.id, 'REJECT')}
+                    disabled={acting}
+                  >
+                    Decline Appeal
+                  </Button>
+                </div>
               )}
             </div>
           ))

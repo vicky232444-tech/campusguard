@@ -1,6 +1,6 @@
-# 🛡️ CampusGuard — Smart Campus & Building Safety Platform
+# 🛡️ OmniGuard — Universal Public & Private Building Operations Platform
 
-> **TechTrix'26 — Real-Time IoT & Campus Security Management System**  
+> **Universal Facility & Security Management System for Hospitals, Residential Colonies, Commercial Towers & Public Complexes**  
 > Built with Next.js 16, React 19, Tailwind CSS v4, Prisma SQLite, Socket.IO, and Caddy.
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/vicky232444-tech/campusguard)

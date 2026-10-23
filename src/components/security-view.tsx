@@ -20,10 +20,10 @@ import { DoorClosed, LogOut, ShieldAlert, ShieldCheck, UserPlus, Users, Sparkles
 import { ZONES } from '@/lib/types'
 
 const VISITOR_TEMPLATES = [
-  { label: 'Courier / Delivery', visitorName: 'Amazon / BlueDart Courier', phone: '+91 98711-23450', purpose: 'Package Delivery to Central Dispatch', hostName: 'Dr. Anil Rao (Admin)', zone: 'Administrative Block' },
-  { label: 'Parent Meeting', visitorName: 'Sunita Sharma (Parent)', phone: '+91 98102-54321', purpose: 'Parent-Teacher Meeting with HOD', hostName: 'Priya Nair (Faculty)', zone: 'Academic Block A' },
-  { label: 'AC / Tech Contractor', visitorName: 'Rajesh Shinde (HVAC Tech)', phone: '+91 99201-87654', purpose: 'Central Chiller Preventive Maintenance', hostName: 'Meera Krishnan (Facilities)', zone: 'Utility & Plant Room' },
-  { label: 'Official Auditor / Guest', visitorName: 'Prof. K. N. Iyer (Guest Speaker)', phone: '+91 94320-11223', purpose: 'Annual Symposium Keynote Address', hostName: 'Dr. Anil Rao (Admin)', zone: 'Auditorium & Library' },
+  { label: 'Courier & Logistics Delivery', visitorName: 'BlueDart / Express Delivery', phone: '+91 98711-23450', purpose: 'Parcel Delivery to Reception / Dispatch', hostName: 'Facility Front Desk', zone: 'Block A (Residential / Inpatient)' },
+  { label: 'Patient / Resident Family Visit', visitorName: 'Sunita Sharma (Visitor)', phone: '+91 98102-54321', purpose: 'Resident Visit / Inpatient Meeting', hostName: 'Aarav Sharma (Resident)', zone: 'Block A (Residential / Inpatient)' },
+  { label: 'Technical Maintenance Contractor', visitorName: 'Rajesh Shinde (HVAC Tech)', phone: '+91 99201-87654', purpose: 'Central Chiller & Utility Inspection', hostName: 'Facilities Maintenance Desk', zone: 'Central Chiller & Utility Plant' },
+  { label: 'Official Auditor / Business Guest', visitorName: 'Dr. K. N. Iyer (Auditor)', phone: '+91 94320-11223', purpose: 'Building Safety & Compliance Audit', hostName: 'Building Management Office', zone: 'Block B (Commercial / Diagnostic)' },
 ]
 
 function SecurityStats({ events, visitors }: { events: SecurityEvent[]; visitors: VisitorLog[] }) {
@@ -245,7 +245,7 @@ function CheckInDialog({ onDone }: { onDone: () => void }) {
     phone: '',
     purpose: '',
     hostName: '',
-    zone: 'Administrative Block',
+    zone: 'Block A (Residential / Inpatient)',
   })
 
   // Automatic entry autofill helper
@@ -276,7 +276,7 @@ function CheckInDialog({ onDone }: { onDone: () => void }) {
     try {
       await api('/api/security/visitors', { method: 'POST', json: form })
       toast.success(lang === 'hi' ? 'आगंतुक पास जारी कर दिया गया!' : 'Visitor checked in — Pass generated!')
-      setForm({ visitorName: '', phone: '', purpose: '', hostName: '', zone: 'Administrative Block' })
+      setForm({ visitorName: '', phone: '', purpose: '', hostName: '', zone: 'Block A (Residential / Inpatient)' })
       setOpen(false)
       onDone()
     } catch (e) {

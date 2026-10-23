@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
   const user = await getUser(req)
   if (!user) return unauthorized()
 
-  const isResponder = ['STAFF', 'SECURITY', 'MAINTENANCE', 'ADMIN'].includes(user.role)
+  const isResponder = ['SECURITY', 'MAINTENANCE', 'ADMIN'].includes(user.role)
   const sos = await db.sosAlert.findMany({
     where: isResponder ? {} : { triggeredById: user.id },
     orderBy: { createdAt: 'desc' },
