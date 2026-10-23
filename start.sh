@@ -7,9 +7,9 @@ echo "   CampusGuard — Production Service Startup   "
 echo "   External Render Port: $RENDER_PORT"
 echo "============================================="
 
-# Ensure db directory exists and has full write permissions
-mkdir -p db
-chmod -R 777 db
+# Ensure db directories exist and have full write permissions
+mkdir -p /app/db /app/.next/standalone/db /app/.next/db db .next/standalone/db .next/db 2>/dev/null || true
+chmod -R 777 /app/db /app/.next/standalone/db /app/.next/db db 2>/dev/null || true
 
 # 1. Start sim-service in background on port 3003
 if [ -d "mini-services/sim-service" ]; then
@@ -17,9 +17,9 @@ if [ -d "mini-services/sim-service" ]; then
     (cd mini-services/sim-service && bun index.ts) &
 fi
 
-# 2. Start Next.js standalone on internal port 3000 with explicit HOSTNAME
+# 2. Start Next.js standalone on internal port 3000 with explicit HOSTNAME and DATABASE_URL
 echo "[start.sh] Starting Next.js server on internal port 3000..."
-(HOSTNAME="0.0.0.0" PORT=3000 bun .next/standalone/server.js) &
+(DATABASE_URL="file:/app/db/custom.db" HOSTNAME="0.0.0.0" PORT=3000 bun .next/standalone/server.js) &
 
 # 3. Wait until Next.js is responding on port 3000
 echo "[start.sh] Waiting for Next.js to be ready on internal port 3000..."

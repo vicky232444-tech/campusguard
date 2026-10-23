@@ -12,6 +12,6 @@ services:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        value: file:../db/custom.db
+        value: file:/app/db/custom.db
       - key: INTERNAL_SECRET
         value: campusguard-demo-secret
