@@ -17,18 +17,23 @@ if [ -d "mini-services/sim-service" ]; then
     (cd mini-services/sim-service && bun index.ts) &
 fi
 
-# 2. Start Next.js standalone on internal port 3000
+# 2. Start Next.js standalone on internal port 3000 with explicit HOSTNAME
 echo "[start.sh] Starting Next.js server on internal port 3000..."
-if [ -f ".next/standalone/server.js" ]; then
-    (PORT=3000 bun .next/standalone/server.js) &
-else
-    (PORT=3000 bun run start) &
-fi
+(HOSTNAME="0.0.0.0" PORT=3000 bun .next/standalone/server.js) &
 
-# 3. Wait briefly for internal services to spin up
-sleep 3
+# 3. Wait until Next.js is responding on port 3000
+echo "[start.sh] Waiting for Next.js to be ready on internal port 3000..."
+i=1
+while [ $i -le 30 ]; do
+    if curl -s -f http://127.0.0.1:3000/api > /dev/null 2>&1; then
+        echo "[start.sh] Next.js is ready after ${i}s!"
+        break
+    fi
+    sleep 1
+    i=$((i + 1))
+done
 
-# 4. Start Caddy in foreground on Render's external port
+# 4. Start Caddy in foreground on Render external port
 export PORT="$RENDER_PORT"
 echo "[start.sh] Starting Caddy reverse proxy on external port $PORT..."
 exec caddy run --config Caddyfile --adapter caddyfile

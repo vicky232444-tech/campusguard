@@ -8,7 +8,7 @@
  */
 
 const SIM_DIR = 'mini-services/sim-service'
-const HEALTH_URL = 'http://localhost:3103/health'
+const HEALTH_URL = 'http://127.0.0.1:3003/health'
 
 type SupervisorState = {
   child: ReturnType<typeof import('child_process').spawn> | null
