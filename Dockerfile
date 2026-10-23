@@ -1,8 +1,8 @@
 # Stage 1: Official Caddy binary
-FROM caddy:2-alpine AS caddy-bin
+FROM caddy:alpine AS caddy-bin
 
 # Stage 2: Build Next.js & Dependencies
-FROM oven/bun:1.2-debian AS builder
+FROM oven/bun:debian AS builder
 WORKDIR /app
 
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -12,7 +12,7 @@ ENV DATABASE_URL="file:../db/custom.db"
 COPY package.json bun.lock* ./
 COPY prisma ./prisma/
 
-# Install root dependencies (including devDependencies for build)
+# Install root dependencies
 RUN bun install
 
 # Generate Prisma Client
@@ -29,13 +29,8 @@ RUN bun run build
 RUN mkdir -p .next/standalone/.next && cp -r .next/static .next/standalone/.next/ || true
 RUN cp -r public .next/standalone/ || true
 
-# Install sim-service dependencies
-WORKDIR /app/mini-services/sim-service
-RUN bun install
-WORKDIR /app
-
 # Stage 3: Minimal Production Image
-FROM oven/bun:1.2-debian AS runner
+FROM oven/bun:debian AS runner
 WORKDIR /app
 
 # Copy Caddy binary
