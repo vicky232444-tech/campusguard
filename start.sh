@@ -1,7 +1,7 @@
-#!/bin/bash
+#!/bin/sh
 set -e
 
-RENDER_PORT=${PORT:-10000}
+RENDER_PORT="${PORT:-10000}"
 echo "============================================="
 echo "   CampusGuard — Production Service Startup   "
 echo "   External Render Port: $RENDER_PORT"
@@ -18,13 +18,17 @@ if [ -d "mini-services/sim-service" ]; then
 fi
 
 # 2. Start Next.js standalone on internal port 3000
-echo "[start.sh] Starting Next.js standalone server on internal port 3000..."
-(PORT=3000 bun server.js) &
+echo "[start.sh] Starting Next.js server on internal port 3000..."
+if [ -f ".next/standalone/server.js" ]; then
+    (PORT=3000 bun .next/standalone/server.js) &
+else
+    (PORT=3000 bun run start) &
+fi
 
 # 3. Wait briefly for internal services to spin up
-sleep 2
+sleep 3
 
 # 4. Start Caddy in foreground on Render's external port
-export PORT=$RENDER_PORT
+export PORT="$RENDER_PORT"
 echo "[start.sh] Starting Caddy reverse proxy on external port $PORT..."
 exec caddy run --config Caddyfile --adapter caddyfile
