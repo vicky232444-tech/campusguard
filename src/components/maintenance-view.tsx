@@ -407,7 +407,7 @@ function ReportDialog({ onDone }: { onDone: () => void }) {
             <Wrench className="h-3.5 w-3.5 mr-1.5" /> {t('maint.report_fault')}
           </Button>
         </DialogTrigger>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" onCloseAutoFocus={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Wrench className="h-5 w-5 text-emerald-500" />
@@ -1129,7 +1129,7 @@ function AdminRatingsSection() {
                     <Star className="h-3.5 w-3.5 fill-amber-500" />
                     <span>{r.stars} / 5</span>
                   </div>
-                  <Pill label={r.status.replaceAll('_', ' ')} className={r.status === 'APPROVED' ? STATUS_STYLES.RESOLVED : r.status === 'REJECTED_FALSE' ? STATUS_STYLES.REJECTED : STATUS_STYLES.PENDING} />
+                  <Pill label={r.status} className={r.status === 'APPROVED' ? STATUS_STYLES.RESOLVED : r.status === 'REJECTED_FALSE' ? STATUS_STYLES.REJECTED : STATUS_STYLES.PENDING} />
                 </div>
               </div>
 

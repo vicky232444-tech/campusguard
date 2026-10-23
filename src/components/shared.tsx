@@ -37,12 +37,16 @@ export const STATUS_STYLES: Record<string, string> = {
   TAILGATING: 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30',
   AFTER_HOURS: 'bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30',
   DOOR_HELD_OPEN: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30',
+  PAID: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30',
+  REJECTED_FALSE: 'bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30',
+  REJECTED_UNVERIFIED: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30',
 }
 
-export function Pill({ label, className }: { label: string; className?: string }) {
+export function Pill({ label, className }: { label?: string | null; className?: string }) {
+  const text = String(label ?? '').replaceAll('_', ' ')
   return (
     <Badge variant="outline" className={cn('text-[11px] font-medium px-1.5 py-0', className)}>
-      {label.replaceAll('_', ' ')}
+      {text || 'N/A'}
     </Badge>
   )
 }

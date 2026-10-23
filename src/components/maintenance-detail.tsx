@@ -159,6 +159,9 @@ export function ReportDetail({
   const [txnId, setTxnId] = useState<string>(() => `TXN-${Date.now()}`)
   const [paymentPaid, setPaymentPaid] = useState<boolean>(false)
 
+  // camera modal target ('proof' | 'confirm' | null)
+  const [cameraTarget, setCameraTarget] = useState<'proof' | 'confirm' | null>(null)
+
   // rating modal
   const [ratingModalOpen, setRatingModalOpen] = useState(false)
   // step 3 (reporter)
@@ -233,9 +236,10 @@ export function ReportDetail({
   const fine = report.fines?.[0]
 
   return (
-    <Dialog open={!!report} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[88vh] overflow-y-auto">
-        <DialogHeader>
+    <>
+      <Dialog open={!!report} onOpenChange={(v) => !v && onClose()}>
+        <DialogContent className="max-w-2xl max-h-[88vh] overflow-y-auto" onCloseAutoFocus={(e) => e.preventDefault()}>
+          <DialogHeader>
           <DialogTitle className="flex flex-wrap items-center gap-2 text-base">
             <span className="font-mono text-xs text-muted-foreground">{report.code}</span>
             {report.title}
@@ -369,7 +373,7 @@ export function ReportDetail({
                 )} />
                 <div className="min-w-0">
                   <p className="text-xs font-medium">
-                    {u.status.replaceAll('_', ' ')}
+                    {String(u.status ?? '').replaceAll('_', ' ')}
                     <span className="font-normal text-muted-foreground"> — {u.by}</span>
                     {u.by === 'AI Verification Engine' && (
                       <span className="ml-1.5 rounded bg-purple-500/15 px-1 py-0.5 text-[9px] font-semibold text-purple-600 dark:text-purple-400">AI</span>
@@ -448,7 +452,12 @@ export function ReportDetail({
 
             <div className="grid gap-3 sm:grid-cols-2">
               {proofType === 'photo' ? (
-                <ProofPicker value={proofFile} onChange={setProofFile} label="After-work proof photo * (JPG/PNG)" />
+                <ProofPicker
+                  value={proofFile}
+                  onChange={setProofFile}
+                  label="After-work proof photo * (JPG/PNG)"
+                  onLaunchCamera={() => setCameraTarget('proof')}
+                />
               ) : (
                 <div className="space-y-1.5">
                   <Label className="text-[11px] text-muted-foreground">Video Proof File / Link *</Label>
@@ -569,7 +578,12 @@ export function ReportDetail({
                   Upload a photo of the repaired item. The AI will cross-match it with the maintenance team&apos;s proof photo before the administrator gives the final approval.
                 </p>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <ProofPicker value={confirmFile} onChange={setConfirmFile} label="Your confirmation photo * (JPG/PNG)" />
+                  <ProofPicker
+                    value={confirmFile}
+                    onChange={setConfirmFile}
+                    label="Your confirmation photo * (JPG/PNG)"
+                    onLaunchCamera={() => setCameraTarget('confirm')}
+                  />
                   <div className="space-y-1.5">
                     <Label htmlFor="cf-note" className="text-[11px] text-muted-foreground">Your note</Label>
                     <Textarea id="cf-note" rows={3} value={confirmNote} onChange={(e) => setConfirmNote(e.target.value)} placeholder="e.g. Lights are stable now, no flickering" className="text-sm" />
@@ -658,28 +672,47 @@ export function ReportDetail({
             Repair status updates are performed by the maintenance team{report.assignedTo ? ` — currently assigned to ${report.assignedTo}` : ''}.
           </p>
         )}
-
-        <WorkerRatingModal
-          open={ratingModalOpen}
-          onClose={() => setRatingModalOpen(false)}
-          report={report}
-          user={user}
-          onRated={() => {
-            onChanged()
-          }}
-        />
       </DialogContent>
     </Dialog>
+
+    {/* Sibling modals outside the parent Dialog to avoid Radix UI nested dialog crash */}
+    <WorkerRatingModal
+      open={ratingModalOpen}
+      onClose={() => setRatingModalOpen(false)}
+      report={report}
+      user={user}
+      onRated={() => onChanged()}
+    />
+
+    <CameraCaptureModal
+      open={!!cameraTarget}
+      onClose={() => setCameraTarget(null)}
+      onCapture={(res) => {
+        if (cameraTarget === 'proof') {
+          setProofFile({ data: res.dataUrl, name: 'camera-verified-proof.jpg' })
+        } else if (cameraTarget === 'confirm') {
+          setConfirmFile({ data: res.dataUrl, name: 'camera-verified-confirm.jpg' })
+        }
+        setCameraTarget(null)
+      }}
+      title={cameraTarget === 'proof' ? 'Capture Work Completion Proof' : 'Capture Reporter Confirmation Photo'}
+    />
+  </>
   )
 }
 
-function ProofPicker({ value, onChange, label }: {
+function ProofPicker({
+  value,
+  onChange,
+  label,
+  onLaunchCamera,
+}: {
   value: { data: string; name: string } | null
   onChange: (v: { data: string; name: string } | null) => void
   label: string
+  onLaunchCamera?: () => void
 }) {
   const [err, setErr] = useState(false)
-  const [camOpen, setCamOpen] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const onFile = async (f: File | undefined) => {
     if (!f) return
@@ -704,7 +737,7 @@ function ProofPicker({ value, onChange, label }: {
         <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
-            onClick={() => setCamOpen(true)}
+            onClick={() => onLaunchCamera?.()}
             className="flex h-24 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-emerald-500/40 bg-emerald-500/5 text-xs font-semibold text-emerald-700 dark:text-emerald-400 transition-colors hover:bg-emerald-500/10"
           >
             <Camera className="h-4 w-4" />
@@ -722,15 +755,6 @@ function ProofPicker({ value, onChange, label }: {
       )}
       <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => onFile(e.target.files?.[0])} aria-label={label} />
       {err && <p className="text-[10px] text-red-500">Could not read that image — try another file</p>}
-
-      <CameraCaptureModal
-        open={camOpen}
-        onClose={() => setCamOpen(false)}
-        onCapture={(res) => {
-          onChange({ data: res.dataUrl, name: 'camera-verified-proof.jpg' })
-        }}
-        title="Capture Verification Proof"
-      />
     </div>
   )
 }
@@ -795,7 +819,7 @@ function WorkerRatingModal({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto" onCloseAutoFocus={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <Star className="h-5 w-5 text-amber-500 fill-amber-500" />

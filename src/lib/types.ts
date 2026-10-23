@@ -343,6 +343,31 @@ export const BUILDING_ZONES_CONFIG: Record<string, { label: string; places: stri
     label: 'Perimeter Gates & Security Checkpoint',
     places: ['Main Gate 1 Checkpoint', 'Service & Cargo Gate 2', 'Security Command Cabin', 'Visitor Kiosk'],
   },
+  // Backward compatibility for existing campus & facility records
+  'Academic Block B': {
+    label: 'Academic Block B',
+    places: ['Lab 2', 'Room 201', 'Lecture Hall 1', 'Seminar Room', 'Projector Hall'],
+  },
+  'Academic Block A': {
+    label: 'Academic Block A',
+    places: ['Main Auditorium', 'Classroom 101', 'Classroom 102', 'Faculty Lounge'],
+  },
+  'Hostel Block A': {
+    label: 'Hostel Block A',
+    places: ['Room 101 - 110', 'Common Room', 'Dining Hall', 'Terrace'],
+  },
+  'Hostel Block B': {
+    label: 'Hostel Block B',
+    places: ['Room 201 - 210', 'Study Room', 'Lobby'],
+  },
+  'Central Library': {
+    label: 'Central Library',
+    places: ['Reading Hall 1', 'Digital Library Section', 'Reference Desk', 'Stack Room'],
+  },
+  'Cafeteria & Dining': {
+    label: 'Cafeteria & Dining',
+    places: ['Food Court Floor 1', 'Kitchen Area', 'Beverage Counter'],
+  },
 }
 
 export const ZONES = [

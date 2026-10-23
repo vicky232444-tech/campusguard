@@ -147,7 +147,7 @@ export function CameraCaptureModal({ open, onClose, onCapture, title }: CameraCa
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose() }}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md" onCloseAutoFocus={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Camera className="h-5 w-5 text-emerald-500" />
