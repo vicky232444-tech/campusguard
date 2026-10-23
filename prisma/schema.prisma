@@ -1,0 +1,205 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─── People & Roles ───────────────────────────────────────────────────────────
+
+model User {
+  id          String   @id @default(cuid())
+  name        String
+  username    String   @unique // individual login name per person
+  email       String   @unique
+  password    String // scrypt$<salt>$<hash> — individual credentials per user
+  role        String // STUDENT | STAFF | SECURITY | MAINTENANCE | ADMIN
+  dept        String?
+  color       String   @default("#10b981")
+  createdAt   DateTime @default(now())
+  reports     MaintenanceReport[] @relation("Reporter")
+  assigned    MaintenanceReport[] @relation("Assignee")
+}
+
+// ─── Module 1: Building Condition Monitoring ─────────────────────────────────
+
+model Sensor {
+  id            String   @id @default(cuid())
+  code          String   @unique // TEMP-A201
+  name          String
+  type          String // TEMPERATURE | SMOKE | GAS | WATER_LEVEL | POWER_LOAD | AIR_QUALITY | VIBRATION | HUMIDITY
+  zone          String
+  location      String
+  unit          String
+  minThreshold  Float
+  maxThreshold  Float
+  baseline      Float // simulation anchor value
+  lastValue     Float?
+  lastStatus    String   @default("NORMAL") // NORMAL | WARNING | CRITICAL
+  updatedAt     DateTime @updatedAt
+  createdAt     DateTime @default(now())
+  readings      SensorReading[]
+}
+
+model SensorReading {
+  id        String   @id @default(cuid())
+  sensorId  String
+  sensor    Sensor   @relation(fields: [sensorId], references: [id], onDelete: Cascade)
+  value     Float
+  isAnomaly Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([sensorId, createdAt])
+}
+
+// ─── Alerts (sensor / security / SOS / maintenance derived) ──────────────────
+
+model Alert {
+  id             String    @id @default(cuid())
+  type           String // SENSOR | SECURITY | SOS | MAINTENANCE
+  severity       String // INFO | MEDIUM | HIGH | CRITICAL
+  title          String
+  message        String
+  zone           String?
+  sourceType     String? // Sensor | SecurityEvent | SOSAlert | MaintenanceReport
+  sourceId       String?
+  status         String    @default("ACTIVE") // ACTIVE | ACKNOWLEDGED | RESOLVED
+  acknowledgedBy String?
+  acknowledgedAt DateTime?
+  resolvedBy     String?
+  resolvedAt     DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@index([status, createdAt])
+}
+
+// ─── Module 2: Security Monitoring ───────────────────────────────────────────
+
+model SecurityEvent {
+  id           String   @id @default(cuid())
+  zone         String
+  area         String // specific gate / door
+  personName   String
+  credential   String // KEYCARD-0231
+  eventType    String // ACCESS_GRANTED | ACCESS_DENIED | TAILGATING | AFTER_HOURS | DOOR_HELD_OPEN
+  detail       String?
+  isSuspicious Boolean  @default(false)
+  isSimulated  Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model VisitorLog {
+  id          String    @id @default(cuid())
+  visitorName String
+  phone       String?
+  purpose     String
+  hostName    String
+  zone        String?
+  passNo      String
+  checkInAt   DateTime  @default(now())
+  checkOutAt  DateTime?
+  status      String    @default("INSIDE") // INSIDE | CHECKED_OUT
+}
+
+// ─── Module 3: Emergency SOS ──────────────────────────────────────────────────
+
+model SosAlert {
+  id             String    @id @default(cuid())
+  triggeredById  String?
+  triggeredBy    String // display name
+  role           String
+  emergencyType  String // MEDICAL | FIRE | SECURITY_THREAT | ACCIDENT | OTHER
+  message        String?
+  shareLocation  Boolean   @default(false)
+  latitude       Float?
+  longitude      Float?
+  locationText   String? // zone selected manually
+  status         String    @default("ACTIVE") // ACTIVE | ACKNOWLEDGED | RESOLVED
+  acknowledgedBy String?
+  acknowledgedAt DateTime?
+  resolvedBy     String?
+  resolvedAt     DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@index([status, createdAt])
+}
+
+// ─── Module 4: Maintenance Management ────────────────────────────────────────
+
+model MaintenanceReport {
+  id           String    @id @default(cuid())
+  code         String    @unique // MR-0007
+  reportedById String?
+  reportedBy   String
+  reporter     User?     @relation("Reporter", fields: [reportedById], references: [id])
+  category     String // ELECTRICAL | PLUMBING | HVAC | STRUCTURAL | FURNITURE | EQUIPMENT | SAFETY
+  title        String
+  description  String
+  zone         String
+  location     String?
+  priority     String    @default("MEDIUM") // LOW | MEDIUM | HIGH | URGENT
+  photoData    String? // base64 data URL
+  status       String    @default("PENDING") // PENDING | APPROVED | IN_PROGRESS | PROOF_SUBMITTED | AWAITING_ADMIN | RESOLVED | REJECTED
+  assignedTo   String?
+  assignedToId String?
+  assignee     User?     @relation("Assignee", fields: [assignedToId], references: [id])
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  resolvedAt   DateTime?
+  updates      ReportUpdate[]
+  fines        Fine[]
+
+  // ── 3-step verification workflow ──────────────────────────────────────────
+  // Step 1: admin verifies the report & forwards it to the maintenance team
+  adminApprovedBy   String?
+  adminApprovedAt   DateTime?
+  // Step 2: maintenance uploads after-work proof; AI checks for morphing
+  proofMedia        String? // base64 data URL
+  proofNote         String?
+  proofUploadedAt   DateTime?
+  aiAuthenticity    String? // AUTHENTIC | MORPHED | ERROR
+  aiTamperScore     Float? // 0-100, higher = more likely manipulated
+  aiAuthenticityNote String?
+  // Step 3: reporter uploads confirmation photo; AI matches with proof
+  userConfirmMedia  String? // base64 data URL
+  userConfirmNote   String?
+  userConfirmAt     DateTime?
+  aiMatchScore      Float? // 0-100 similarity
+  aiMatchVerdict    String? // MATCHED | MISMATCHED
+  aiMatchNote       String?
+  // Final administrator decision
+  finalVerdictBy    String?
+  finalVerdictAt    DateTime?
+  reworkCount       Int       @default(0)
+
+  @@index([status, updatedAt])
+}
+
+model ReportUpdate {
+  id        String   @id @default(cuid())
+  reportId  String
+  report    MaintenanceReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  status    String
+  note      String?
+  by        String
+  createdAt DateTime @default(now())
+}
+
+// Penalty issued when the AI verifier detects a morphed / manipulated proof upload
+model Fine {
+  id         String   @id @default(cuid())
+  reportId   String
+  report     MaintenanceReport @relation(fields: [reportId], references: [id])
+  reportCode String
+  finedTo    String // maintenance member name
+  finedToId  String?
+  amount     Float // in INR
+  reason     String
+  status     String   @default("ISSUED") // ISSUED | WAIVED
+  issuedBy   String   @default("AI Verification Engine")
+  createdAt  DateTime @default(now())
+}
