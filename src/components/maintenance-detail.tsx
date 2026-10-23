@@ -817,18 +817,35 @@ function WorkerRatingModal({
     }
   }
 
+  if (!open) return null
+
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto" onCloseAutoFocus={(e) => e.preventDefault()}>
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-base">
-            <Star className="h-5 w-5 text-amber-500 fill-amber-500" />
-            Rate Technician: {report.assignedTo ?? 'Technician'}
-          </DialogTitle>
-          <DialogDescription className="text-xs">
-            Your review boosts the worker&apos;s recommendations. Please provide genuine details.
-          </DialogDescription>
-        </DialogHeader>
+    <div
+      className="fixed inset-0 z-[110] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-150"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !submitting) onClose()
+      }}
+    >
+      <div className="relative w-full max-w-md rounded-2xl border bg-card text-card-foreground shadow-2xl p-5 space-y-4 max-h-[92vh] overflow-y-auto">
+        <div className="flex items-center justify-between pb-2 border-b">
+          <div>
+            <div className="flex items-center gap-2 font-bold text-base">
+              <Star className="h-5 w-5 text-amber-500 fill-amber-500" />
+              Rate Technician: {report.assignedTo ?? 'Technician'}
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              Your review boosts the worker&apos;s recommendations. Please provide genuine details.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={submitting}
+            className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
 
         <div className="space-y-4 py-2 text-xs">
           {/* Policy Consent Screen */}
@@ -929,7 +946,7 @@ function WorkerRatingModal({
           </div>
         </div>
 
-        <DialogFooter className="gap-2">
+        <div className="flex items-center justify-end gap-2 pt-2 border-t">
           <Button variant="outline" size="sm" onClick={onClose} disabled={submitting}>Cancel</Button>
           <Button
             size="sm"
@@ -939,8 +956,8 @@ function WorkerRatingModal({
           >
             {submitting ? 'Submitting…' : 'Submit Rating for Review'}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </div>
+    </div>
   )
 }
