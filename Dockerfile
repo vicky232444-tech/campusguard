@@ -7,6 +7,7 @@ WORKDIR /app
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
+ENV DATABASE_URL="file:../db/custom.db"
 
 # Copy package manifests
 COPY package.json bun.lock* ./
@@ -18,11 +19,15 @@ RUN bun install
 # Generate Prisma Client
 RUN bun x prisma generate
 
-# Copy source code
+# Copy source code and database
 COPY . .
 
 # Build Next.js standalone output
 RUN bun run build
+
+# Prepare standalone static and public assets
+RUN mkdir -p .next/standalone/.next && cp -r .next/static .next/standalone/.next/ || true
+RUN cp -r public .next/standalone/ || true
 
 # Install sim-service dependencies
 WORKDIR /app/mini-services/sim-service
@@ -39,8 +44,8 @@ COPY --from=caddy-bin /usr/bin/caddy /usr/local/bin/caddy
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=10000
-ENV DATABASE_URL=file:../db/custom.db
-ENV INTERNAL_SECRET=campusguard-demo-secret
+ENV DATABASE_URL="file:../db/custom.db"
+ENV INTERNAL_SECRET="campusguard-demo-secret"
 
 # Copy Next.js standalone bundle
 COPY --from=builder /app/.next/standalone ./
