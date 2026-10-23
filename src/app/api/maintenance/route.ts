@@ -40,6 +40,7 @@ export async function POST(req: NextRequest) {
     location?: string
     priority?: string
     photoData?: string | null
+    assignedTo?: string
   }
 
   const categories = ['ELECTRICAL', 'PLUMBING', 'HVAC', 'STRUCTURAL', 'FURNITURE', 'EQUIPMENT', 'SAFETY']
@@ -68,6 +69,7 @@ export async function POST(req: NextRequest) {
       location: body.location?.trim() || null,
       priority: body.priority || 'MEDIUM',
       photoData: body.photoData || null,
+      assignedTo: body.assignedTo?.trim() || null,
       status: 'PENDING',
     },
   })

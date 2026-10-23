@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "CampusGuard — Smart Building Safety, Security & Maintenance",
   description:
-    "TechTrix'26 Project 8: unified building condition monitoring, security, emergency SOS and maintenance management for schools, colleges and public buildings.",
+    "Unified building condition monitoring, security, emergency SOS, fast visitor registration and maintenance management for campuses and smart buildings.",
   icons: {
     icon: "/logo.svg",
   },

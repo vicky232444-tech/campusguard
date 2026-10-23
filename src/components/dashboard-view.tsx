@@ -81,7 +81,7 @@ export function DashboardView() {
         <StatCard label="Open repairs" value={stats?.openRepairs ?? '—'} icon={<Wrench className="h-4 w-4" />} tone={stats && stats.urgentRepairs > 0 ? 'danger' : 'info'} sub={stats && stats.urgentRepairs > 0 ? `${stats.urgentRepairs} urgent` : 'none urgent'} />
         <StatCard label="Visitors inside" value={stats?.visitorsInside ?? '—'} icon={<Users className="h-4 w-4" />} tone="neutral" sub="checked in now" />
         <StatCard label="Suspicious (24h)" value={stats?.suspiciousToday ?? '—'} icon={<ShieldAlert className="h-4 w-4" />} tone={stats && stats.suspiciousToday > 0 ? 'warning' : 'success'} sub={`${stats?.accessEventsToday ?? 0} access events`} />
-        <StatCard label="Sensors online" value={stats ? `${stats.sensorsOnline}/${stats.sensorsTotal}` : '—'} icon={<Activity className="h-4 w-4" />} tone="success" sub="simulated network" />
+        <StatCard label="Sensors online" value={stats ? `${stats.sensorsOnline}/${stats.sensorsTotal}` : '—'} icon={<Activity className="h-4 w-4" />} tone="success" sub="active telemetry grid" />
       </div>
 
       {/* Charts row */}
@@ -89,7 +89,7 @@ export function DashboardView() {
         <div className="lg:col-span-3 rounded-xl border bg-card p-4">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <div>
-              <h3 className="text-sm font-semibold">Live sensor trend — 2 hours</h3>
+              <h3 className="text-sm font-semibold">Sensor Telemetry Trend — 2 Hours</h3>
               <p className="text-xs text-muted-foreground">{selectedSensor ? `${selectedSensor.name} · ${selectedSensor.zone} (${selectedSensor.unit})` : 'Loading…'}</p>
             </div>
             <select

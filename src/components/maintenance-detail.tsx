@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { CameraCaptureModal } from '@/components/camera-capture-modal'
 import {
   BadgeCheck, BadgeX, Camera, CheckCircle2, ClipboardCheck, Gavel, HandCoins, ImageOff,
   Loader2, PlayCircle, RefreshCcw, Send, ShieldAlert, Sparkles, UserCheck, X,
@@ -491,6 +492,7 @@ function ProofPicker({ value, onChange, label }: {
   label: string
 }) {
   const [err, setErr] = useState(false)
+  const [camOpen, setCamOpen] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const onFile = async (f: File | undefined) => {
     if (!f) return
@@ -512,17 +514,36 @@ function ProofPicker({ value, onChange, label }: {
           </Button>
         </div>
       ) : (
-        <button
-          type="button"
-          onClick={() => fileRef.current?.click()}
-          className="flex h-28 w-full flex-col items-center justify-center gap-1 rounded-lg border border-dashed text-xs text-muted-foreground transition-colors hover:border-emerald-500/40 hover:bg-muted/50"
-        >
-          <Camera className="h-4 w-4" />
-          Attach photo
-        </button>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => setCamOpen(true)}
+            className="flex h-24 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-emerald-500/40 bg-emerald-500/5 text-xs font-semibold text-emerald-700 dark:text-emerald-400 transition-colors hover:bg-emerald-500/10"
+          >
+            <Camera className="h-4 w-4" />
+            Live Camera
+          </button>
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            className="flex h-24 flex-col items-center justify-center gap-1 rounded-lg border border-dashed text-xs text-muted-foreground transition-colors hover:border-emerald-500/40 hover:bg-muted/50"
+          >
+            <Camera className="h-4 w-4" />
+            Choose File
+          </button>
+        </div>
       )}
       <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => onFile(e.target.files?.[0])} aria-label={label} />
       {err && <p className="text-[10px] text-red-500">Could not read that image — try another file</p>}
+
+      <CameraCaptureModal
+        open={camOpen}
+        onClose={() => setCamOpen(false)}
+        onCapture={(res) => {
+          onChange({ data: res.dataUrl, name: 'camera-verified-proof.jpg' })
+        }}
+        title="Capture Verification Proof"
+      />
     </div>
   )
 }
