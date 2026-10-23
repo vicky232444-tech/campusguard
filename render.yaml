@@ -4,6 +4,8 @@ services:
     runtime: docker
     plan: free
     region: oregon
+    autoDeploy: true
+    healthCheckPath: /api
     envVars:
       - key: PORT
         value: 10000

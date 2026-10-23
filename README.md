@@ -3,6 +3,8 @@
 > **TechTrix'26 — Real-Time IoT & Campus Security Management System**  
 > Built with Next.js 16, React 19, Tailwind CSS v4, Prisma SQLite, Socket.IO, and Caddy.
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/vicky232444-tech/campusguard)
+
 ---
 
 ## 🌟 Key Features
@@ -17,26 +19,17 @@
 
 ---
 
-## 🚀 1-Click Deploy on Render
+## 🚀 1-Click Free Deploy on Render
 
-### Method 1: Using Render Blueprint (Recommended)
-1. Go to **[Render Dashboard](https://dashboard.render.com/)**.
-2. Click **New +** → **Blueprint**.
-3. Connect your repository: `https://github.com/vicky232444-tech/campusguard`.
-4. Render will automatically detect [`render.yaml`](render.yaml) and deploy the Docker web service.
-5. Click **Apply**. Your app will be live with full HTTPS in ~2–3 minutes!
+Click the button below to deploy this repository to Render on the **100% Free Plan ($0/mo)**:
 
-### Method 2: Manual Web Service
-1. In Render, click **New +** → **Web Service**.
-2. Select **Build and deploy from a Git repository** and pick `campusguard`.
-3. Set **Language / Runtime** to **Docker**.
-4. Set **Instance Type** to **Free**.
-5. Add Environment Variables:
-   - `PORT`: `10000`
-   - `NODE_ENV`: `production`
-   - `DATABASE_URL`: `file:../db/custom.db`
-   - `INTERNAL_SECRET`: `campusguard-demo-secret`
-6. Click **Deploy Web Service**!
+👉 **[Deploy to Render (1-Click)](https://render.com/deploy?repo=https://github.com/vicky232444-tech/campusguard)**
+
+Render will automatically read [`render.yaml`](render.yaml) and configure:
+* **Runtime:** Docker (Multi-stage Bun 1.2 + Caddy Gateway)
+* **Plan:** Free ($0.00 / month)
+* **Port:** 10000 (Mapped automatically to Next.js + Socket.IO)
+* **Auto-Deploy:** Enabled on every git push
 
 ---
 
