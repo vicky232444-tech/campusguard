@@ -171,7 +171,7 @@ export function ReportDetail({
   const [verdictNote, setVerdictNote] = useState('')
 
   const isAdmin = user?.role === 'ADMIN'
-  const isMaint = user?.role === 'MAINTENANCE' || user?.role === 'ADMIN'
+  const isMaint = user?.role === 'MAINTENANCE'
   const isReporter = !!user && !!report && (report.reportedById === user.id || report.reportedBy === user.name)
 
   const { data: teamData } = useQuery({
@@ -609,9 +609,24 @@ export function ReportDetail({
 
         {/* Waiting states */}
         {report.status === 'APPROVED' && !isMaint && (
-          <p className="rounded-lg bg-muted/50 p-3 text-[11px] text-muted-foreground">
-            Verified by {report.adminApprovedBy} — waiting for {report.assignedTo ?? 'maintenance team'} to start the repair.
-          </p>
+          <div className="rounded-lg border bg-muted/40 p-3 space-y-1">
+            <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+              <Clock className="h-3.5 w-3.5 text-amber-500" /> Awaiting Repair to Start
+            </p>
+            <p className="text-[11px] text-muted-foreground">
+              Verified by {report.adminApprovedBy || 'Administrator'} — assigned to {report.assignedTo ?? 'maintenance technician'}. Waiting for technician to start repair.
+            </p>
+          </div>
+        )}
+        {report.status === 'IN_PROGRESS' && !isMaint && (
+          <div className="rounded-lg border bg-muted/40 p-3 space-y-1">
+            <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+              <Wrench className="h-3.5 w-3.5 text-sky-500" /> Repair In Progress by Technician
+            </p>
+            <p className="text-[11px] text-muted-foreground">
+              Currently assigned to {report.assignedTo ?? 'maintenance technician'}. The technician will complete the repair on-site and upload completion proof &amp; payment details.
+            </p>
+          </div>
         )}
         {report.status === 'PENDING' && !isAdmin && (
           <p className="rounded-lg bg-muted/50 p-3 text-[11px] text-muted-foreground">
@@ -652,7 +667,7 @@ export function ReportDetail({
             </Button>
           </div>
         )}
-        {!isMaint && !isReporter && report.status !== 'REJECTED' && (
+        {!isMaint && !isReporter && !isAdmin && report.status !== 'REJECTED' && (
           <p className="rounded-lg bg-muted/50 p-3 text-[11px] text-muted-foreground">
             Repair status updates are performed by the maintenance team{report.assignedTo ? ` — currently assigned to ${report.assignedTo}` : ''}.
           </p>
