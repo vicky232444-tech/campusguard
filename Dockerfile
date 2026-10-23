@@ -6,14 +6,13 @@ FROM oven/bun:1.2-debian AS builder
 WORKDIR /app
 
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV NODE_ENV=production
 ENV DATABASE_URL="file:../db/custom.db"
 
 # Copy package manifests
 COPY package.json bun.lock* ./
 COPY prisma ./prisma/
 
-# Install root dependencies
+# Install root dependencies (including devDependencies for build)
 RUN bun install
 
 # Generate Prisma Client
@@ -23,6 +22,7 @@ RUN bun x prisma generate
 COPY . .
 
 # Build Next.js standalone output
+ENV NODE_ENV=production
 RUN bun run build
 
 # Prepare standalone static and public assets

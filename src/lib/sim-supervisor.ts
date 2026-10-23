@@ -43,7 +43,7 @@ async function spawnSim(state: SupervisorState) {
     const cwd = resolve(process.cwd(), SIM_DIR)
     mkdirSync(resolve(process.cwd(), '.zscripts'), { recursive: true })
 
-    const bin = process.env.BUN_BIN || 'bun'
+    const bin = process.env.BUN_BIN || (process.execPath && process.execPath.includes('bun') ? process.execPath : 'bun')
     const child = spawn(bin, ['--hot', 'index.ts'], {
       cwd,
       env: { ...process.env, INTERNAL_SECRET: process.env.INTERNAL_SECRET || 'campusguard-demo-secret' },
@@ -57,6 +57,10 @@ async function spawnSim(state: SupervisorState) {
     })
     child.stderr.on('data', (d: Buffer) => {
       try { appendFileSync(logPath, d) } catch { /* ignore */ }
+    })
+    child.on('error', (err) => {
+      console.warn('[sim-supervisor] sim service process error (handled):', err.message)
+      if (state.child === child) state.child = null
     })
     child.on('exit', (code) => {
       console.warn(`[sim-supervisor] sim service exited (code ${code}) — watchdog will respawn`)
