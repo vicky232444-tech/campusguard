@@ -83,7 +83,7 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
 
     // Dashboard — Technician
     'dash.tech.work_orders': 'Active Work Orders',
-    'dash.tech.ai_check': 'In AI Tamper Check',
+    'dash.tech.ai_check': 'Under Verification',
     'dash.tech.resolved': 'Resolved Repairs',
     'dash.tech.total': 'Total Tracked Repairs',
     'dash.tech.queue_title': 'Field Work Orders Requiring Action',
@@ -208,7 +208,7 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
 
     // Dashboard — Technician
     'dash.tech.work_orders': 'सक्रिय कार्य आदेश',
-    'dash.tech.ai_check': 'AI जांच प्रक्रिया में',
+    'dash.tech.ai_check': 'सत्यापन प्रक्रिया में',
     'dash.tech.resolved': 'पूर्ण मरम्मत कार्य',
     'dash.tech.total': 'कुल ट्रैक की गई शिकायतें',
     'dash.tech.queue_title': 'आवश्यक कार्रवाई वाले कार्य आदेश',

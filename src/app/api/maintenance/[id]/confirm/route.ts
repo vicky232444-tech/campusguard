@@ -66,11 +66,11 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
       status: 'AWAITING_ADMIN',
       note:
         ai.verdict === 'MATCHED'
-          ? `Reporter's confirmation photo MATCHED the maintenance proof (${ai.score}% similarity). ${ai.note} — awaiting final administrator decision.`
+          ? `Reporter uploaded confirmation photo. Awaiting final administrator decision.`
           : ai.verdict === 'MISMATCHED'
-            ? `Reporter's confirmation photo did NOT match the maintenance proof (${ai.score}% similarity). ${ai.note} — flagged for administrator review.`
-            : `AI match could not be completed — flagged for manual admin review. ${ai.note}`,
-      by: ai.verdict === 'ERROR' ? user.name : 'AI Verification Engine',
+            ? `Reporter uploaded confirmation photo — flagged for administrator review.`
+            : `Confirmation photo submitted — flagged for administrator review.`,
+      by: user.name,
     },
   })
 

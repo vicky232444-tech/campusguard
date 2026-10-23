@@ -79,7 +79,7 @@ const PRIORITY_CLS = Object.fromEntries(PRIORITIES.map((p) => [p.id, p.cls]))
 const COLUMNS: { ids: ReportStatus[]; label: string; accent: string; topBorder: string; empty: string }[] = [
   { ids: ['PENDING'], label: 'Pending admin check', accent: 'text-amber-500', topBorder: 'border-t-3 border-t-amber-500', empty: 'No pending requests' },
   { ids: ['APPROVED', 'IN_PROGRESS'], label: 'Approved / in progress', accent: 'text-sky-500', topBorder: 'border-t-3 border-t-sky-500', empty: 'Nothing being repaired right now' },
-  { ids: ['PROOF_SUBMITTED', 'AWAITING_ADMIN'], label: 'AI verification', accent: 'text-purple-500', topBorder: 'border-t-3 border-t-purple-500', empty: 'No repairs in verification' },
+  { ids: ['PROOF_SUBMITTED', 'AWAITING_ADMIN'], label: 'Proof Submitted / Review', accent: 'text-purple-500', topBorder: 'border-t-3 border-t-purple-500', empty: 'No repairs awaiting review' },
   { ids: ['RESOLVED'], label: 'Resolved', accent: 'text-emerald-500', topBorder: 'border-t-3 border-t-emerald-500', empty: 'No resolved requests yet' },
 ]
 
@@ -240,7 +240,7 @@ export function MaintenanceView() {
               {lang === 'hi' ? '3-चरणीय सत्यापन प्रक्रिया:' : '3-Step Verification Process:'}
             </span>
             <span><b>1.</b> {lang === 'hi' ? 'शिकायत व तकनीशियन चयन' : 'Report & Field Technician Selection'}</span>
-            <span><b>2.</b> {lang === 'hi' ? 'मरम्मत उपरांत कैमरा फोटो व AI जांच' : 'Camera Photo & AI Tamper Check'}</span>
+            <span><b>2.</b> {lang === 'hi' ? 'मरम्मत उपरांत कैमरा फोटो व सत्यापन' : 'Camera Photo & Work Proof'}</span>
             <span><b>3.</b> {lang === 'hi' ? 'उपयोगकर्ता पुष्टि व अंतिम सत्यापन' : 'User Confirmation & Final Resolution'}</span>
           </div>
 
@@ -417,8 +417,8 @@ function ReportDialog({ onDone }: { onDone: () => void }) {
             </DialogTitle>
             <DialogDescription>
               {lang === 'hi'
-                ? 'शिकायत दर्ज करें, कार्यक्षेत्र अनुसार तकनीशियन चुनें और कैमरे से सीधा फोटो खींचकर AI सत्यापन प्राप्त करें।'
-                : 'Report broken equipment, select a specialized field technician, and take a direct photo for AI verification.'}
+                ? 'शिकायत दर्ज करें, कार्यक्षेत्र अनुसार तकनीशियन चुनें और कैमरे से सीधा फोटो खींचकर सत्यापन प्राप्त करें।'
+                : 'Report broken equipment, select a specialized field technician, and take a direct photo for verification.'}
             </DialogDescription>
           </DialogHeader>
 
@@ -544,14 +544,14 @@ function ReportDialog({ onDone }: { onDone: () => void }) {
 
             {/* Photo Capture & Verification */}
             <div className="space-y-2">
-              <Label className="text-xs font-semibold">Camera Photo Evidence &amp; AI Validation</Label>
+              <Label className="text-xs font-semibold">Camera Photo Evidence &amp; Verification</Label>
 
               {photo ? (
                 <div className="relative overflow-hidden rounded-xl border space-y-1 p-2 bg-muted/30">
                   <img src={photo} alt="Attached fault preview" className="max-h-40 w-full object-cover rounded-lg" />
                   <div className="flex items-center justify-between text-xs px-1">
                     <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                      <Sparkles className="h-3 w-3" />
+                      <Camera className="h-3 w-3" />
                       {photoNote || t('maint.photo_validation')}
                     </span>
                     <Button
@@ -664,14 +664,14 @@ function StudentVerificationSection() {
   const verifiedCount = records.filter((r) => r.status === 'VERIFIED').length
   const pendingCount = records.filter((r) => r.status === 'PENDING').length
 
-  const handleRunAiVerification = async (id: string) => {
+  const handleVerifyStudent = async (id: string) => {
     setVerifyingId(id)
     try {
       const res = await api<{ record: StudentVerification }>(`/api/students/verification/${id}/verify`, {
         method: 'POST',
         json: { action: 'APPROVE' },
       })
-      toast.success(`AI Verification Complete: ${res.record.studentName} is Authenticated (${res.record.aiConfidenceScore}%)`)
+      toast.success(`Verification Complete: ${res.record.studentName} is Verified`)
       queryClient.invalidateQueries({ queryKey: ['student-verifications'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
     } catch (e) {
@@ -727,12 +727,12 @@ function StudentVerificationSection() {
         <div>
           <h2 className="text-base font-extrabold flex items-center gap-2">
             <UserCheck className="h-5 w-5 text-emerald-500" />
-            {lang === 'hi' ? 'विद्यार्थी सत्यापन व रिकॉर्ड्स' : 'Student Records & AI Verification'}
+            {lang === 'hi' ? 'विद्यार्थी व निवासी सत्यापन रिकॉर्ड्स' : 'Student & Occupant Verification Records'}
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
             {isAdmin
-              ? 'Administrator management portal for student identities, roll numbers and biometric AI tamper validation.'
-              : 'View your student verification status and authentic biometric AI badge.'}
+              ? 'Administrator management portal for resident identities, room allocation, and credential verification.'
+              : 'View your resident verification status and identity badge.'}
           </p>
         </div>
 
@@ -833,19 +833,21 @@ function StudentVerificationSection() {
           <p className="text-[10px] text-muted-foreground">Enrolled directory</p>
         </div>
         <div className="rounded-2xl border bg-card p-3.5 shadow-sm">
-          <p className="text-xs text-muted-foreground">AI Verified</p>
+          <p className="text-xs text-muted-foreground">Verified</p>
           <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">{verifiedCount}</p>
-          <p className="text-[10px] text-muted-foreground">Biometrics &amp; ID validated</p>
+          <p className="text-[10px] text-muted-foreground">ID &amp; Credentials validated</p>
         </div>
         <div className="rounded-2xl border bg-card p-3.5 shadow-sm">
           <p className="text-xs text-muted-foreground">Pending Review</p>
           <p className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-0.5">{pendingCount}</p>
-          <p className="text-[10px] text-muted-foreground">Awaiting AI verification</p>
+          <p className="text-[10px] text-muted-foreground">Awaiting administrator review</p>
         </div>
         <div className="rounded-2xl border bg-card p-3.5 shadow-sm">
-          <p className="text-xs text-muted-foreground">AI Confidence Avg</p>
-          <p className="text-2xl font-bold text-sky-600 dark:text-sky-400 mt-0.5">97.8%</p>
-          <p className="text-[10px] text-muted-foreground">High confidence threshold</p>
+          <p className="text-xs text-muted-foreground">Verification Rate</p>
+          <p className="text-2xl font-bold text-sky-600 dark:text-sky-400 mt-0.5">
+            {records.length > 0 ? `${Math.round((verifiedCount / records.length) * 100)}%` : '100%'}
+          </p>
+          <p className="text-[10px] text-muted-foreground">Completed verifications</p>
         </div>
       </div>
 
@@ -912,12 +914,12 @@ function StudentVerificationSection() {
                 <div className="flex items-center gap-2">
                   {student.status === 'VERIFIED' && (
                     <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                      <ShieldCheck className="h-4 w-4" /> AI Verified
+                      <ShieldCheck className="h-4 w-4" /> Verified
                     </span>
                   )}
                   {student.status === 'PENDING' && (
                     <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-xs font-bold text-amber-600 dark:text-amber-400">
-                      <Clock className="h-3.5 w-3.5 animate-spin" /> Pending AI Scan
+                      <Clock className="h-3.5 w-3.5" /> Pending Review
                     </span>
                   )}
                   {student.status === 'REJECTED' && (
@@ -928,28 +930,28 @@ function StudentVerificationSection() {
                 </div>
               </div>
 
-              {/* AI Verification Breakdown Card */}
+              {/* Resident Verification Record Summary & Actions */}
               <div className="rounded-xl border bg-muted/30 p-3 flex flex-wrap items-center justify-between gap-3 text-xs">
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="flex items-center gap-1.5">
-                    <Sparkles className="h-3.5 w-3.5 text-emerald-500" />
-                    <span className="text-muted-foreground">Confidence:</span>
+                    <UserCheck className="h-3.5 w-3.5 text-emerald-500" />
+                    <span className="text-muted-foreground">Status:</span>
                     <span className="font-bold text-foreground">
-                      {student.aiConfidenceScore ? `${student.aiConfidenceScore}%` : 'Not run yet'}
+                      {student.status === 'VERIFIED' ? 'Verified Member' : 'Pending Verification'}
                     </span>
                   </div>
                   <span className="text-muted-foreground">·</span>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-muted-foreground">Tamper Risk:</span>
+                    <span className="text-muted-foreground">ID Record:</span>
                     <span className="font-bold text-emerald-600">
-                      {student.aiConfidenceScore ? `${(100 - student.aiConfidenceScore).toFixed(1)}% (Minimal)` : '—'}
+                      {student.status === 'VERIFIED' ? 'Directory Matched' : 'Submitted'}
                     </span>
                   </div>
                   <span className="text-muted-foreground">·</span>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-muted-foreground">Biometrics:</span>
+                    <span className="text-muted-foreground">Verification:</span>
                     <span className="font-bold text-foreground">
-                      {student.status === 'VERIFIED' ? 'Face & ID Card Matched' : 'Awaiting admin execution'}
+                      {student.status === 'VERIFIED' ? (student.verifiedBy ? `By ${student.verifiedBy}` : 'Approved') : 'Awaiting Administrator'}
                     </span>
                   </div>
                 </div>
@@ -961,11 +963,11 @@ function StudentVerificationSection() {
                       <Button
                         size="sm"
                         className="h-7 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-1 shadow"
-                        onClick={() => handleRunAiVerification(student.id)}
+                        onClick={() => handleVerifyStudent(student.id)}
                         disabled={verifyingId === student.id}
                       >
-                        <Sparkles className="h-3 w-3" />
-                        {verifyingId === student.id ? 'Analyzing…' : 'Run AI Verification'}
+                        <Check className="h-3 w-3" />
+                        {verifyingId === student.id ? 'Verifying…' : 'Verify Record'}
                       </Button>
                     )}
                     {student.status !== 'REJECTED' && (

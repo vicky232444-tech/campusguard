@@ -74,7 +74,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
         finedTo: memberName,
         finedToId: report.assignedToId ?? user.id,
         amount,
-        reason: `AI verification detected a morphed/manipulated proof photo (tamper confidence ${ai.tamperScore}%): ${ai.note}`,
+        reason: `Invalid or manipulated proof photo detected: ${ai.note}`,
       },
     })
 
@@ -82,8 +82,8 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
       data: {
         reportId: id,
         status: 'REJECTED',
-        note: `AI rejected the proof upload — manipulated image detected (${ai.tamperScore}% tamper confidence). Fine of ₹${amount} issued to ${memberName}.`,
-        by: 'AI Verification Engine',
+        note: `Proof upload flagged and rejected — invalid image detected. Fine of ₹${amount} issued to ${memberName}.`,
+        by: 'System Verification',
       },
     })
 
@@ -91,8 +91,8 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
       data: {
         type: 'MAINTENANCE',
         severity: 'HIGH',
-        title: `AI rejected morphed proof — fine issued (${report.code})`,
-        message: `Proof photo for ${report.code} — "${report.title}" failed the AI authenticity audit (${ai.tamperScore}% tamper confidence). Work rejected; ₹${amount} fine issued to ${memberName}.`,
+        title: `Manipulated proof rejected — fine issued (${report.code})`,
+        message: `Proof photo for ${report.code} — "${report.title}" failed authenticity check. Work rejected; ₹${amount} fine issued to ${memberName}.`,
         zone: report.zone,
         sourceType: 'MaintenanceReport',
         sourceId: report.id,
@@ -134,9 +134,9 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
       status: 'PROOF_SUBMITTED',
       note:
         ai.verdict === 'AUTHENTIC'
-          ? `Proof photo passed the AI authenticity audit (${ai.tamperScore}% tamper confidence). ${ai.note}`
-          : `Proof photo could not be auto-verified — flagged for manual admin review. ${ai.note}`,
-      by: ai.verdict === 'AUTHENTIC' ? 'AI Verification Engine' : user.name,
+          ? `Work completion proof photo submitted. Awaiting reporter confirmation.`
+          : `Proof photo submitted — flagged for manual administrator review.`,
+      by: user.name,
     },
   })
 

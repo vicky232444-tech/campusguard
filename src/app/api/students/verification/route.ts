@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
         aiConfidenceScore: null,
         aiVerdict: null,
         aiChecks: null,
-        remarks: 'New hostel allotment submission awaiting admin AI verification.',
+        remarks: 'New hostel allotment submission awaiting admin verification.',
       },
       {
         studentName: 'Sneha Roy',

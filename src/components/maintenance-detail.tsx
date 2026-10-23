@@ -49,8 +49,8 @@ export async function fileToDataUrl(file: File): Promise<string> {
 
 const STEPS = [
   { id: 1, label: 'Admin verifies', hint: 'Administrator checks the report & forwards to maintenance' },
-  { id: 2, label: 'Proof + AI audit', hint: 'Maintenance uploads after-work photo — AI detects morphing' },
-  { id: 3, label: 'Reporter confirms', hint: 'Reporter uploads own photo — AI matches both' },
+  { id: 2, label: 'Technician Proof', hint: 'Maintenance uploads after-work completion proof' },
+  { id: 3, label: 'Reporter confirms', hint: 'Reporter uploads photo to confirm completion' },
   { id: 4, label: 'Final verdict', hint: 'Administrator accepts or sends back for rework' },
 ]
 
@@ -72,7 +72,7 @@ function WorkflowSteps({ report }: { report: MaintenanceReport }) {
   return (
     <div className="rounded-lg border p-3 space-y-2.5">
       <div className="flex items-center justify-between">
-        <p className="text-xs font-semibold flex items-center gap-1.5"><ClipboardCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" /> 3-step verification channel</p>
+        <p className="text-xs font-semibold flex items-center gap-1.5"><ClipboardCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" /> Resolution Workflow</p>
         <Pill label={report.status} className={STATUS_STYLES[report.status] ?? ''} />
       </div>
       <div className="flex items-center gap-1">
@@ -213,15 +213,15 @@ export function ReportDetail({
       })
       const v = res.ai?.verdict
       if (v === 'MORPHED') {
-        toast.error(`AI detected a morphed photo (${res.ai.tamperScore}% tamper confidence) — work rejected & fine issued`, { duration: 10000 })
+        toast.error(`Proof rejected — work sent back for review`, { duration: 8000 })
       } else if (v === 'MATCHED') {
-        toast.success(`AI matched both photos (${res.ai.score}% similarity) — sent to administrator`, { duration: 8000 })
+        toast.success(`Photos submitted successfully — sent to administrator for review`, { duration: 8000 })
       } else if (v === 'MISMATCHED') {
-        toast.warning(`AI could NOT match the photos (${res.ai.score}%) — administrator will review`, { duration: 10000 })
+        toast.warning(`Confirmation photo submitted — sent to administrator for review`, { duration: 8000 })
       } else if (v === 'AUTHENTIC') {
-        toast.success(`AI audit passed (${res.ai.tamperScore}% tamper confidence) — reporter confirmation requested`, { duration: 8000 })
+        toast.success(`Proof uploaded successfully — reporter confirmation requested`, { duration: 8000 })
       } else {
-        toast.info('AI could not auto-verify — flagged for manual admin review')
+        toast.info('Proof submitted — flagged for administrator review')
       }
       onChanged()
       onClose()
@@ -306,35 +306,17 @@ export function ReportDetail({
           fallback="No photo attached to the original report"
         />
 
-        {/* ── AI verification results ── */}
-        {(report.aiAuthenticity || report.aiMatchVerdict) && (
-          <div className="space-y-2 rounded-lg border bg-muted/30 p-3">
-            <p className="text-xs font-semibold flex items-center gap-1.5">
-              <Sparkles className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
-              AI verification engine results
+        {/* ── Work Completion Proof Photos (Without AI verification engine box) ── */}
+        {(report.proofMedia || report.userConfirmMedia) && (
+          <div className="space-y-2 rounded-xl border border-border/80 bg-muted/20 p-3 shadow-xs">
+            <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
+              <Camera className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+              Repair Work Proof &amp; Confirmation Photos
             </p>
-            {report.aiAuthenticity && (
-              <AiBadge
-                label={`Proof authenticity — ${report.aiAuthenticity}`}
-                ok={report.aiAuthenticity === 'AUTHENTIC'}
-                score={report.aiTamperScore != null ? 100 - report.aiTamperScore : null}
-                note={report.aiAuthenticityNote}
-              />
-            )}
-            {report.aiMatchVerdict && (
-              <AiBadge
-                label={`Photo match — ${report.aiMatchVerdict}`}
-                ok={report.aiMatchVerdict === 'MATCHED'}
-                score={report.aiMatchScore}
-                note={report.aiMatchNote}
-              />
-            )}
-            {(report.proofMedia || report.userConfirmMedia) && (
-              <div className="grid grid-cols-2 gap-2 pt-1">
-                <PhotoBox src={report.proofMedia} caption="Maintenance proof photo" fallback="Proof not uploaded yet" />
-                <PhotoBox src={report.userConfirmMedia} caption="Reporter confirmation photo" fallback="Confirmation not uploaded yet" />
-              </div>
-            )}
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <PhotoBox src={report.proofMedia} caption="Maintenance proof photo" fallback="Proof not uploaded yet" />
+              <PhotoBox src={report.userConfirmMedia} caption="Reporter confirmation photo" fallback="Confirmation not uploaded yet" />
+            </div>
           </div>
         )}
 
@@ -366,20 +348,24 @@ export function ReportDetail({
             {report.updates?.map((u) => (
               <li key={u.id} className="flex gap-2.5">
                 <span className={cn('mt-1 h-2 w-2 shrink-0 rounded-full',
-                  u.by === 'AI Verification Engine' ? 'bg-purple-500'
-                  : u.status === 'PENDING' ? 'bg-amber-500'
+                  u.status === 'PENDING' ? 'bg-amber-500'
                   : u.status === 'REJECTED' ? 'bg-red-500'
                   : u.status === 'RESOLVED' ? 'bg-emerald-500' : 'bg-sky-500',
                 )} />
                 <div className="min-w-0">
                   <p className="text-xs font-medium">
                     {String(u.status ?? '').replaceAll('_', ' ')}
-                    <span className="font-normal text-muted-foreground"> — {u.by}</span>
-                    {u.by === 'AI Verification Engine' && (
-                      <span className="ml-1.5 rounded bg-purple-500/15 px-1 py-0.5 text-[9px] font-semibold text-purple-600 dark:text-purple-400">AI</span>
-                    )}
+                    <span className="font-normal text-muted-foreground"> — {u.by === 'AI Verification Engine' ? 'System Verification' : u.by}</span>
                   </p>
-                  {u.note && <p className="text-xs text-muted-foreground">{u.note}</p>}
+                  {u.note && (
+                    <p className="text-xs text-muted-foreground">
+                      {u.note
+                        .replace(/AI verification detected a morphed\/manipulated proof photo/g, 'Proof rejected after review')
+                        .replace(/AI rejected the proof upload/g, 'Proof rejected after review')
+                        .replace(/AI /g, 'System ')
+                        .replace(/AI audit/g, 'verification check')}
+                    </p>
+                  )}
                   <p className="text-[10px] text-muted-foreground">{dateTimeStr(u.createdAt)}</p>
                 </div>
               </li>
@@ -421,7 +407,7 @@ export function ReportDetail({
               <Camera className="h-3.5 w-3.5" /> Step 2 — Work Complete: Proof of Work &amp; Payment
             </p>
             <p className="text-[11px] text-muted-foreground">
-              Upload video/photo as proof of work. The AI engine checks uploads for tampering/morphing. Choose payment via Cash or dynamic online QR code.
+              Upload video/photo as proof of work. Choose payment via Cash or dynamic online QR code.
             </p>
             {report.status === 'APPROVED' && (
               <Button size="sm" variant="outline" disabled={busy} onClick={() => act(`/api/maintenance/${report.id}`, { status: 'IN_PROGRESS', note: 'Repair started' }, 'Repair started')}>
@@ -561,9 +547,9 @@ export function ReportDetail({
                   paymentStatus: paymentPaid || paymentMode === 'CASH' ? 'PAID' : 'PENDING',
                 }
               )}
-              className="bg-purple-600 hover:bg-purple-700 text-white"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
             >
-              {aiBusy ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> AI analysing proof…</> : <><Sparkles className="h-3.5 w-3.5" /> Submit proof &amp; payment for AI verification</>}
+              {aiBusy ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Submitting proof…</> : <><CheckCircle2 className="h-3.5 w-3.5" /> Submit proof &amp; payment details</>}
             </Button>
           </div>
         )}
@@ -575,7 +561,7 @@ export function ReportDetail({
             {isReporter ? (
               <>
                 <p className="text-[11px] text-muted-foreground">
-                  Upload a photo of the repaired item. The AI will cross-match it with the maintenance team&apos;s proof photo before the administrator gives the final approval.
+                  Upload a photo of the repaired item to confirm that the work has been completed before the administrator reviews.
                 </p>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <ProofPicker
@@ -589,8 +575,8 @@ export function ReportDetail({
                     <Textarea id="cf-note" rows={3} value={confirmNote} onChange={(e) => setConfirmNote(e.target.value)} placeholder="e.g. Lights are stable now, no flickering" className="text-sm" />
                   </div>
                 </div>
-                <Button size="sm" disabled={aiBusy || !confirmFile} onClick={() => submitWithAi(`/api/maintenance/${report.id}/confirm`, confirmFile?.data, confirmNote, 'Confirmation submitted')} className="bg-purple-600 hover:bg-purple-700 text-white">
-                  {aiBusy ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> AI matching photos…</> : <><Sparkles className="h-3.5 w-3.5" /> Upload &amp; AI-match my photo</>}
+                <Button size="sm" disabled={aiBusy || !confirmFile} onClick={() => submitWithAi(`/api/maintenance/${report.id}/confirm`, confirmFile?.data, confirmNote, 'Confirmation submitted')} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                  {aiBusy ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Submitting confirmation…</> : <><CheckCircle2 className="h-3.5 w-3.5" /> Upload confirmation photo</>}
                 </Button>
               </>
             ) : (
@@ -604,8 +590,7 @@ export function ReportDetail({
           <div className="space-y-3 rounded-lg border border-orange-500/30 bg-orange-500/5 p-3">
             <p className="flex items-center gap-1.5 text-xs font-semibold"><Gavel className="h-3.5 w-3.5" /> Final decision — administrator</p>
             <p className="text-[11px] text-muted-foreground">
-              AI authenticity: <b>{report.aiAuthenticity}</b> ({report.aiTamperScore != null ? `${100 - report.aiTamperScore}% genuine confidence` : 'n/a'}) ·
-              Photo match: <b>{report.aiMatchVerdict}</b> ({report.aiMatchScore ?? 'n/a'}%). Review both photos above, then decide.
+              Review both technician proof and reporter confirmation photos above, then decide.
             </p>
             <div className="space-y-1.5">
               <Label htmlFor="v-note" className="text-[11px] text-muted-foreground">Decision note (optional)</Label>
@@ -636,7 +621,7 @@ export function ReportDetail({
         {report.status === 'REJECTED' && (
           <p className="flex items-start gap-1.5 rounded-lg bg-red-500/10 p-3 text-[11px] text-red-600 dark:text-red-400">
             <ShieldAlert className="h-4 w-4 shrink-0" />
-            The AI rejected this proof upload as morphed/manipulated. The work was auto-rejected{fine ? ` and a ₹${fine.amount.toLocaleString('en-IN')} fine was issued to ${fine.finedTo}` : ''}. The administrator may re-assign the repair.
+            The proof upload was rejected. The work was sent back for rework{fine ? ` and a ₹${fine.amount.toLocaleString('en-IN')} fine was issued to ${fine.finedTo}` : ''}. The administrator may re-assign the repair.
           </p>
         )}
         {isAdmin && report.status === 'REJECTED' && (

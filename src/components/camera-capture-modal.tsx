@@ -450,7 +450,7 @@ export function CameraCaptureModal({ open, onClose, onCapture, title }: CameraCa
 
                 <div className="flex items-center justify-between text-[9px] text-white/70 font-mono">
                   <span>720p / 1080p HDR</span>
-                  <span>AI Tamper Guard</span>
+                  <span>Secure Capture</span>
                 </div>
               </div>
 

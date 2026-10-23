@@ -187,7 +187,7 @@ function AdminDashboard() {
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
         <StatCard label={t('dash.kpi.alerts')} value={stats?.activeAlerts ?? '—'} icon={<AlertTriangle className="h-4 w-4" />} tone={stats && stats.activeAlerts > 0 ? 'warning' : 'success'} sub={lang === 'hi' ? 'सभी क्षेत्र' : 'all zones'} />
         <StatCard label={t('dash.kpi.sos')} value={stats?.activeSos ?? '—'} icon={<Siren className="h-4 w-4" />} tone={stats && stats.activeSos > 0 ? 'danger' : 'success'} sub={pendingRequests.length > 0 ? `${pendingRequests.length} ${lang === 'hi' ? 'स्वीकृति लंबित' : 'pending approval'}` : (lang === 'hi' ? 'कोई संकट नहीं' : 'all clear')} />
-        <StatCard label={t('dash.kpi.verif')} value={studentRecords.length} icon={<UserCheck className="h-4 w-4" />} tone={pendingVerifications.length > 0 ? 'warning' : 'success'} sub={`${pendingVerifications.length} ${lang === 'hi' ? 'AI जांच लंबित' : 'pending AI verify'}`} />
+        <StatCard label={t('dash.kpi.verif')} value={studentRecords.length} icon={<UserCheck className="h-4 w-4" />} tone={pendingVerifications.length > 0 ? 'warning' : 'success'} sub={`${pendingVerifications.length} ${lang === 'hi' ? 'सत्यापन लंबित' : 'pending review'}`} />
         <StatCard label={t('dash.kpi.repairs')} value={stats?.openRepairs ?? '—'} icon={<Wrench className="h-4 w-4" />} tone={stats && stats.urgentRepairs > 0 ? 'danger' : 'info'} sub={stats && stats.urgentRepairs > 0 ? `${stats.urgentRepairs} ${lang === 'hi' ? 'अति आवश्यक' : 'urgent'}` : (lang === 'hi' ? 'सामान्य' : 'none urgent')} />
         <StatCard label={t('dash.kpi.visitors')} value={stats?.visitorsInside ?? '—'} icon={<Users className="h-4 w-4" />} tone="neutral" sub={lang === 'hi' ? 'वर्तमान में अंदर' : 'checked in now'} />
         <StatCard label={t('dash.kpi.sensors')} value={stats ? `${stats.sensorsOnline}/${stats.sensorsTotal}` : '—'} icon={<Activity className="h-4 w-4" />} tone="success" sub={lang === 'hi' ? 'सक्रिय ग्रिड' : 'active grid'} />
@@ -565,7 +565,7 @@ function StudentDashboard() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 3. TECHNICIAN / MAINTENANCE DASHBOARD: Task Queue, AI Tamper Proofs & Categories
+// 3. TECHNICIAN / MAINTENANCE DASHBOARD: Task Queue, Work Proofs & Categories
 // ─────────────────────────────────────────────────────────────────────────────
 function TechnicianDashboard() {
   const { lang, t } = useI18n()
@@ -577,7 +577,7 @@ function TechnicianDashboard() {
   const reports = repData?.reports ?? []
 
   const pendingProof = reports.filter((r) => r.status === 'IN_PROGRESS' || r.status === 'APPROVED')
-  const inAiVerification = reports.filter((r) => r.status === 'PROOF_SUBMITTED' || r.status === 'AWAITING_ADMIN')
+  const inReview = reports.filter((r) => r.status === 'PROOF_SUBMITTED' || r.status === 'AWAITING_ADMIN')
   const resolved = reports.filter((r) => r.status === 'RESOLVED')
 
   return (
@@ -585,7 +585,7 @@ function TechnicianDashboard() {
       {/* Technician KPI Ribbons */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <StatCard label={t('dash.tech.work_orders')} value={pendingProof.length} icon={<HardHat className="h-4 w-4" />} tone={pendingProof.length > 0 ? 'warning' : 'success'} sub={lang === 'hi' ? 'मरम्मत हेतु आवंटित' : 'assigned for repair'} />
-        <StatCard label={t('dash.tech.ai_check')} value={inAiVerification.length} icon={<Sparkles className="h-4 w-4" />} tone="info" sub={lang === 'hi' ? 'प्रमाण प्रस्तुत' : 'proof submitted'} />
+        <StatCard label={t('dash.tech.ai_check')} value={inReview.length} icon={<Clock className="h-4 w-4" />} tone="info" sub={lang === 'hi' ? 'प्रमाण प्रस्तुत' : 'proof submitted'} />
         <StatCard label={t('dash.tech.resolved')} value={resolved.length} icon={<CheckCircle2 className="h-4 w-4" />} tone="success" sub={lang === 'hi' ? 'पूर्ण' : 'completed'} />
         <StatCard label={t('dash.tech.total')} value={reports.length} icon={<Wrench className="h-4 w-4" />} tone="neutral" sub={lang === 'hi' ? 'समस्त भवन' : 'across all facility'} />
       </div>
@@ -599,8 +599,8 @@ function TechnicianDashboard() {
             </h3>
             <p className="text-xs text-muted-foreground">
               {lang === 'hi'
-                ? 'आवंटित मरम्मत कार्यों की समीक्षा करें और AI जांच हेतु कार्य उपरांत फोटो/वीडियो व भुगतान अपलोड करें।'
-                : 'Review assigned repairs and upload after-work camera photos/videos & payment details for AI verification.'}
+                ? 'आवंटित मरम्मत कार्यों की समीक्षा करें और कार्य उपरांत फोटो/वीडियो व भुगतान विवरण अपलोड करें।'
+                : 'Review assigned repairs and upload after-work camera photos/videos & payment details for administrator review.'}
             </p>
           </div>
           <span className="rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 px-2.5 py-0.5 text-xs font-bold shadow-xs">
