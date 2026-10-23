@@ -23,6 +23,9 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const user = await getUser(req)
   if (!user) return unauthorized()
+  if (user.role === 'MAINTENANCE') {
+    return forbidden('Maintenance team members cannot submit ratings.')
+  }
 
   // Check if user is currently suspended
   const dbUser = await db.user.findUnique({ where: { id: user.id } })

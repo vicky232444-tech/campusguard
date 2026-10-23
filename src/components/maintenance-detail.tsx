@@ -277,8 +277,8 @@ export function ReportDetail({
           </div>
         )}
 
-        {/* Rate Technician section */}
-        {report.status === 'RESOLVED' && (
+        {/* Rate Technician section — ONLY for Residents & Students (NOT for Maintenance Team or Admin) */}
+        {report.status === 'RESOLVED' && !isMaint && !isAdmin && (isReporter || user?.role === 'USER' || user?.role === 'STUDENT') && (
           <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 flex flex-wrap items-center justify-between gap-3 text-xs">
             <div>
               <p className="font-bold flex items-center gap-1.5 text-foreground">
