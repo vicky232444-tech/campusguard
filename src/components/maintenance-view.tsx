@@ -76,11 +76,11 @@ const PRIORITIES = [
 
 const PRIORITY_CLS = Object.fromEntries(PRIORITIES.map((p) => [p.id, p.cls]))
 
-const COLUMNS: { ids: ReportStatus[]; label: string; accent: string; empty: string }[] = [
-  { ids: ['PENDING'], label: 'Pending admin check', accent: 'text-amber-500', empty: 'No pending requests' },
-  { ids: ['APPROVED', 'IN_PROGRESS'], label: 'Approved / in progress', accent: 'text-sky-500', empty: 'Nothing being repaired right now' },
-  { ids: ['PROOF_SUBMITTED', 'AWAITING_ADMIN'], label: 'AI verification', accent: 'text-purple-500', empty: 'No repairs in verification' },
-  { ids: ['RESOLVED'], label: 'Resolved', accent: 'text-emerald-500', empty: 'No resolved requests yet' },
+const COLUMNS: { ids: ReportStatus[]; label: string; accent: string; topBorder: string; empty: string }[] = [
+  { ids: ['PENDING'], label: 'Pending admin check', accent: 'text-amber-500', topBorder: 'border-t-3 border-t-amber-500', empty: 'No pending requests' },
+  { ids: ['APPROVED', 'IN_PROGRESS'], label: 'Approved / in progress', accent: 'text-sky-500', topBorder: 'border-t-3 border-t-sky-500', empty: 'Nothing being repaired right now' },
+  { ids: ['PROOF_SUBMITTED', 'AWAITING_ADMIN'], label: 'AI verification', accent: 'text-purple-500', topBorder: 'border-t-3 border-t-purple-500', empty: 'No repairs in verification' },
+  { ids: ['RESOLVED'], label: 'Resolved', accent: 'text-emerald-500', topBorder: 'border-t-3 border-t-emerald-500', empty: 'No resolved requests yet' },
 ]
 
 export function MaintenanceView() {
@@ -249,13 +249,13 @@ export function MaintenanceView() {
             {COLUMNS.map((col) => {
               const items = filtered.filter((r) => col.ids.includes(r.status))
               return (
-                <div key={col.label} className="rounded-2xl border bg-card/60 p-3.5 space-y-3 shadow-sm">
+                <div key={col.label} className={cn('rounded-2xl border bg-card/70 p-3.5 space-y-3 shadow-sm card-3d', col.topBorder)}>
                   <div className="flex items-center justify-between px-1">
                     <span className="text-xs font-bold flex items-center gap-1.5">
                       <CircleDot className={cn('h-3.5 w-3.5', col.accent)} />
                       {col.label}
                     </span>
-                    <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
+                    <span className="rounded-full bg-muted/80 px-2 py-0.5 text-[10px] font-bold text-muted-foreground shadow-xs">
                       {items.length}
                     </span>
                   </div>
@@ -271,7 +271,7 @@ export function MaintenanceView() {
                       <div
                         key={r.id}
                         onClick={() => setDetailId(r.id)}
-                        className="cursor-pointer rounded-xl border bg-background/90 p-3.5 hover:border-emerald-500/50 transition-all shadow-sm space-y-2 hover:shadow-md cyber-card"
+                        className="cursor-pointer rounded-xl border border-border/75 bg-background/90 p-3.5 hover:border-emerald-500/50 transition-all duration-200 shadow-xs hover:shadow-md hover:-translate-y-0.5 space-y-2 card-3d-hover"
                       >
                         <div className="flex items-center justify-between">
                           <span className="font-mono text-[10px] font-bold text-emerald-600 dark:text-emerald-400">

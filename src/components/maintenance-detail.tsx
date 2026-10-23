@@ -826,7 +826,7 @@ function WorkerRatingModal({
         if (e.target === e.currentTarget && !submitting) onClose()
       }}
     >
-      <div className="relative w-full max-w-md rounded-2xl border bg-card text-card-foreground shadow-2xl p-5 space-y-4 max-h-[92vh] overflow-y-auto">
+      <div className="relative w-full max-w-md rounded-2xl border border-border/80 bg-gradient-to-b from-card to-card/95 text-card-foreground shadow-2xl p-5 space-y-4 max-h-[92vh] overflow-y-auto card-3d border-top-complaints">
         <div className="flex items-center justify-between pb-2 border-b">
           <div>
             <div className="flex items-center gap-2 font-bold text-base">
@@ -888,17 +888,20 @@ function WorkerRatingModal({
                   key={s}
                   type="button"
                   onClick={() => setStars(s)}
-                  className="p-1 hover:scale-110 transition-transform"
+                  className="p-1.5 star-rating-btn cursor-pointer"
+                  aria-label={`${s} Stars`}
                 >
                   <Star
                     className={cn(
-                      'h-6 w-6',
-                      s <= stars ? 'text-amber-500 fill-amber-500' : 'text-muted-foreground'
+                      'h-7 w-7 transition-all duration-200',
+                      s <= stars
+                        ? 'text-amber-500 fill-amber-500 drop-shadow-[0_2px_8px_rgba(245,158,11,0.55)] scale-105'
+                        : 'text-muted-foreground/35 hover:text-amber-400'
                     )}
                   />
                 </button>
               ))}
-              <span className="font-bold ml-2 text-sm">{stars} / 5</span>
+              <span className="font-extrabold ml-2 text-sm text-amber-600 dark:text-amber-400">{stars} / 5</span>
             </div>
           </div>
 

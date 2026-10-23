@@ -203,9 +203,10 @@ export function MonitoringView() {
               key={s.id}
               onClick={() => setDetailId(s.id)}
               className={cn(
-                'text-left rounded-xl border bg-card p-4 transition-all hover:shadow-md hover:border-emerald-500/40',
-                severity === 'CRITICAL' && 'border-red-500/50 ring-1 ring-red-500/30',
-                severity === 'WARNING' && 'border-amber-500/50',
+                'text-left rounded-2xl border border-border/80 bg-gradient-to-b from-card to-card/95 p-4 transition-all duration-200 shadow-xs hover:shadow-md hover:-translate-y-1 hover:border-emerald-500/40 card-3d card-3d-hover cursor-pointer',
+                severity === 'CRITICAL' && 'border-red-500/60 ring-1 ring-red-500/30 border-top-sos',
+                severity === 'WARNING' && 'border-amber-500/60 border-top-complaints',
+                severity === 'NORMAL' && 'border-top-maintenance',
               )}
             >
               <div className="flex items-start justify-between gap-2">

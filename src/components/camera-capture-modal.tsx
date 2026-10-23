@@ -234,7 +234,7 @@ export function CameraCaptureModal({ open, onClose, onCapture, title }: CameraCa
         if (e.target === e.currentTarget) handleClose()
       }}
     >
-      <div className="relative w-full max-w-md rounded-2xl border bg-card text-card-foreground shadow-2xl p-5 space-y-4 max-h-[92vh] overflow-y-auto">
+      <div className="relative w-full max-w-md rounded-2xl border border-border/80 bg-gradient-to-b from-card to-card/95 text-card-foreground shadow-2xl p-5 space-y-4 max-h-[92vh] overflow-y-auto card-3d border-top-maintenance">
         {/* Header */}
         <div className="flex items-center justify-between pb-2 border-b">
           <div className="flex items-center gap-2">

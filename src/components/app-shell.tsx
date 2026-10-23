@@ -188,12 +188,12 @@ export function AppShell() {
             </button>
 
             <div className="flex items-center gap-2.5">
-              <div className="rounded-xl bg-emerald-500/20 p-2 text-emerald-600 dark:text-emerald-400 cyber-glow">
+              <div className="rounded-xl bg-gradient-to-br from-emerald-500/25 to-teal-600/15 p-2 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30 shadow-[0_2px_8px_rgba(16,185,129,0.25)] icon-container-3d">
                 <ShieldCheck className="h-5 w-5" />
               </div>
               <div className="leading-tight">
-                <p className="text-sm font-extrabold tracking-tight">OmniGuard</p>
-                <p className="text-[10px] text-muted-foreground font-medium hidden sm:block">Building Operations Hub</p>
+                <p className="text-sm font-black tracking-tight bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-emerald-400 dark:to-teal-300 bg-clip-text text-transparent">OmniGuard</p>
+                <p className="text-[10px] text-muted-foreground font-semibold hidden sm:block">Building Operations Hub</p>
               </div>
             </div>
           </div>
@@ -266,21 +266,23 @@ export function AppShell() {
                 key={n.id}
                 onClick={() => setView(n.id)}
                 className={cn(
-                  'w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all text-left cyber-card',
+                  'w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200 text-left',
                   view === n.id
-                    ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 font-bold border border-emerald-500/30'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                    ? 'bg-gradient-to-r from-emerald-500/20 via-emerald-500/10 to-transparent text-emerald-800 dark:text-emerald-300 font-extrabold border-l-4 border-l-emerald-500 border-y border-r border-emerald-500/25 shadow-[0_3px_10px_rgba(16,185,129,0.18)] -translate-y-0.5'
+                    : 'text-muted-foreground hover:bg-muted/80 hover:text-foreground hover:-translate-y-0.5 border-l-4 border-l-transparent',
                 )}
                 aria-current={view === n.id ? 'page' : undefined}
               >
                 <div className={cn(
-                  'p-1.5 rounded-lg',
-                  view === n.id ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-300' : 'bg-muted/70 text-muted-foreground'
+                  'p-2 rounded-xl icon-container-3d shrink-0 transition-transform duration-200',
+                  view === n.id
+                    ? 'bg-gradient-to-b from-emerald-500/30 to-emerald-500/15 text-emerald-700 dark:text-emerald-300 shadow-[0_2px_6px_rgba(16,185,129,0.3)] scale-105'
+                    : 'bg-muted/70 text-muted-foreground'
                 )}>
                   {n.icon}
                 </div>
                 <span className="flex-1 min-w-0">
-                  <span className="block truncate">{t(n.labelKey)}</span>
+                  <span className="block truncate font-bold text-xs">{t(n.labelKey)}</span>
                   <span className="block text-[10px] font-normal opacity-70 truncate">{t(n.hintKey)}</span>
                 </span>
               </button>
@@ -308,8 +310,8 @@ export function AppShell() {
                   key={n.id}
                   onClick={() => { setView(n.id); setMobileNavOpen(false) }}
                   className={cn(
-                    'flex items-center gap-2 rounded-lg border px-3 py-2.5 text-xs font-semibold',
-                    view === n.id ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' : 'text-muted-foreground',
+                    'flex items-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-semibold transition-all duration-150',
+                    view === n.id ? 'border-emerald-500/50 bg-gradient-to-b from-emerald-500/20 to-emerald-500/5 text-emerald-800 dark:text-emerald-300 shadow-[0_2px_8px_rgba(16,185,129,0.2)] font-bold -translate-y-0.5' : 'text-muted-foreground hover:bg-muted/60',
                   )}
                 >
                   {n.icon} {t(n.labelKey)}

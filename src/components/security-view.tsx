@@ -117,7 +117,7 @@ export function SecurityView() {
       </div>
 
       {tab === 'visitors' && (
-        <div className="rounded-2xl border bg-card overflow-hidden shadow-sm">
+        <div className="rounded-2xl border border-border/80 bg-gradient-to-b from-card to-card/95 overflow-hidden shadow-sm border-top-security card-3d">
           <div className="px-4 py-3 border-b flex items-center justify-between">
             <span className="text-xs font-bold text-foreground">
               {lang === 'hi' ? 'सक्रिय आगंतुक पास व इतिहास' : 'Active Visitor Passes & Records'}
@@ -187,7 +187,7 @@ export function SecurityView() {
       )}
 
       {tab === 'logs' && (
-        <div className="rounded-2xl border bg-card overflow-hidden shadow-sm">
+        <div className="rounded-2xl border border-border/80 bg-gradient-to-b from-card to-card/95 overflow-hidden shadow-sm border-top-telemetry card-3d">
           <div className="px-4 py-3 border-b flex items-center justify-between">
             <span className="text-xs font-bold text-foreground">Restricted-Area Access Logstream</span>
             <span className="text-xs text-muted-foreground">{events.length} events logged</span>

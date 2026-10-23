@@ -195,7 +195,7 @@ function AdminDashboard() {
 
       {/* Admin Telemetry Trends + Severity Charts */}
       <div className="grid gap-4 lg:grid-cols-5">
-        <div className="lg:col-span-3 rounded-2xl border bg-card p-4 shadow-sm">
+        <div className="lg:col-span-3 rounded-2xl border border-border/80 bg-gradient-to-b from-card to-card/95 p-4 shadow-sm border-top-telemetry card-3d">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <div>
               <h3 className="text-sm font-bold flex items-center gap-2">
@@ -248,7 +248,7 @@ function AdminDashboard() {
         </div>
 
         <div className="lg:col-span-2 space-y-4">
-          <div className="rounded-2xl border bg-card p-4 shadow-sm">
+          <div className="rounded-2xl border border-border/80 bg-gradient-to-b from-card to-card/95 p-4 shadow-sm border-top-sos card-3d">
             <h3 className="text-sm font-bold mb-1">{t('dash.alerts.severity')}</h3>
             <div className="h-[120px]">
               {dash && (
@@ -268,7 +268,7 @@ function AdminDashboard() {
             </div>
           </div>
 
-          <div className="rounded-2xl border bg-card p-4 shadow-sm">
+          <div className="rounded-2xl border border-border/80 bg-gradient-to-b from-card to-card/95 p-4 shadow-sm border-top-maintenance card-3d">
             <h3 className="text-sm font-bold mb-1">{t('dash.repair.pipeline')}</h3>
             <div className="h-[120px]">
               {dash && (
@@ -291,7 +291,7 @@ function AdminDashboard() {
 
       {/* Admin Campus Zones & Activity Log */}
       <div className="grid gap-4 lg:grid-cols-5">
-        <div className="lg:col-span-2 rounded-2xl border bg-card p-4 shadow-sm">
+        <div className="lg:col-span-2 rounded-2xl border border-border/80 bg-gradient-to-b from-card to-card/95 p-4 shadow-sm border-top-complaints card-3d">
           <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
             <Building2 className="h-4 w-4 text-emerald-500" /> {t('dash.building.zones')}
           </h3>
@@ -311,7 +311,7 @@ function AdminDashboard() {
           </div>
         </div>
 
-        <div className="lg:col-span-3 rounded-2xl border bg-card p-4 shadow-sm">
+        <div className="lg:col-span-3 rounded-2xl border border-border/80 bg-gradient-to-b from-card to-card/95 p-4 shadow-sm border-top-telemetry card-3d">
           <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
             <DoorOpen className="h-4 w-4 text-emerald-500" /> {t('dash.operations.feed')}
           </h3>
@@ -369,11 +369,11 @@ function StudentDashboard() {
     <div className="space-y-6">
       {/* Resident Top Welcome & Digital Identity Card (Verification mentions hidden for non-admins) */}
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="md:col-span-2 rounded-2xl border bg-gradient-to-br from-card via-card to-emerald-500/5 p-5 shadow-sm space-y-4">
+        <div className="md:col-span-2 rounded-2xl border border-border/80 bg-gradient-to-br from-card via-card to-emerald-500/5 p-5 shadow-sm space-y-4 border-top-maintenance card-3d">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="flex items-center gap-3">
               <div
-                className="flex h-14 w-14 items-center justify-center rounded-2xl text-lg font-black text-white shadow-md"
+                className="flex h-14 w-14 items-center justify-center rounded-2xl text-lg font-black text-white shadow-md border-t border-white/25 icon-container-3d"
                 style={{ backgroundColor: user?.color || '#10b981' }}
               >
                 {user?.name.split(' ').map((p) => p[0]).slice(0, 2).join('')}
@@ -389,7 +389,7 @@ function StudentDashboard() {
 
             {/* Non-admin clean occupant status badge */}
             <div className="flex flex-col items-end">
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 shadow-sm">
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-gradient-to-b from-emerald-500/15 to-emerald-500/5 px-3 py-1 text-xs font-bold text-emerald-700 dark:text-emerald-300 shadow-xs">
                 <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                 {lang === 'hi' ? 'सक्रिय निवासी / सदस्य' : 'Active Resident / Occupant'}
               </div>
@@ -425,14 +425,14 @@ function StudentDashboard() {
         </div>
 
         {/* Resident Quick Safety Action Widget */}
-        <div className="rounded-2xl border border-red-500/30 bg-gradient-to-br from-card via-card to-red-500/10 p-5 shadow-sm flex flex-col justify-between">
+        <div className="rounded-2xl border border-red-500/30 bg-gradient-to-br from-card via-card to-red-500/10 p-5 shadow-sm flex flex-col justify-between border-top-sos card-3d">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-red-600 dark:text-red-400 flex items-center gap-1.5">
                 <Siren className="h-4 w-4" />
                 {t('dash.res.emergency_hub')}
               </span>
-              <span className="text-[10px] font-bold bg-red-500/20 text-red-600 px-2 py-0.5 rounded-full">
+              <span className="text-[10px] font-bold bg-red-500/20 text-red-600 px-2 py-0.5 rounded-full shadow-xs">
                 {t('dash.res.free_will')}
               </span>
             </div>
@@ -450,7 +450,7 @@ function StudentDashboard() {
                 e.preventDefault()
                 window.location.hash = 'sos'
               }}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-red-600 hover:bg-red-700 text-white py-2.5 text-xs font-bold shadow-md transition-all active:scale-[0.98]"
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white py-2.5 text-xs font-extrabold shadow-[0_4px_12px_rgba(239,68,68,0.35)] transition-all active:scale-[0.98] border-t border-white/25"
             >
               <Siren className="h-4 w-4" /> {t('dash.res.goto_sos')}
             </a>
@@ -463,7 +463,7 @@ function StudentDashboard() {
       </div>
 
       {/* Resident Complaints & Issues Tracker */}
-      <div className="rounded-2xl border bg-card p-5 shadow-sm space-y-4">
+      <div className="rounded-2xl border border-border/80 bg-card p-5 shadow-sm space-y-4 border-top-complaints card-3d">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-3">
           <div>
             <h3 className="text-sm font-bold flex items-center gap-2">
@@ -493,7 +493,7 @@ function StudentDashboard() {
         ) : (
           <div className="space-y-3">
             {myReports.map((report) => (
-              <div key={report.id} className="rounded-xl border p-3.5 space-y-2 bg-muted/20">
+              <div key={report.id} className="rounded-xl border border-border/75 p-3.5 space-y-2 bg-gradient-to-b from-card to-card/90 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 card-3d-hover">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold font-mono text-emerald-600 dark:text-emerald-400">{report.code}</span>
@@ -515,7 +515,7 @@ function StudentDashboard() {
 
       {/* Facility Emergency Directory & Assembly Points */}
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-2xl border bg-card p-5 shadow-sm space-y-3">
+        <div className="rounded-2xl border border-border/80 bg-card p-5 shadow-sm space-y-3 border-top-security card-3d">
           <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
             <PhoneCall className="h-4 w-4 text-emerald-500" /> {t('dash.res.directory')}
           </h3>
@@ -525,26 +525,26 @@ function StudentDashboard() {
                 <p className="font-bold">{lang === 'hi' ? 'राष्ट्रीय आपातकालीन हेल्पलाइन' : 'National Emergency Helpline'}</p>
                 <p className="text-[11px] text-muted-foreground">{lang === 'hi' ? 'पुलिस, अग्निशमन व एम्बुलेंस (ऑल-इन-वन)' : 'All-in-one Police, Fire & Ambulance'}</p>
               </div>
-              <a href="tel:112" className="px-2.5 py-1 rounded bg-emerald-500/15 text-emerald-600 font-bold">112</a>
+              <a href="tel:112" className="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold shadow-xs">112</a>
             </div>
             <div className="py-2 flex items-center justify-between">
               <div>
                 <p className="font-bold">{lang === 'hi' ? 'भवन सुरक्षा मुख्य नियंत्रण कक्ष' : 'Building Security Command Desk'}</p>
                 <p className="text-[11px] text-muted-foreground">{lang === 'hi' ? '24x7 मुख्य द्वार कंट्रोल रूम' : 'Main Gate Control Room 24x7'}</p>
               </div>
-              <a href="tel:1800226787" className="px-2.5 py-1 rounded bg-emerald-500/15 text-emerald-600 font-bold">1800-226-787</a>
+              <a href="tel:1800226787" className="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold shadow-xs">1800-226-787</a>
             </div>
             <div className="py-2 flex items-center justify-between">
               <div>
                 <p className="font-bold">{lang === 'hi' ? 'चिकित्सा केंद्र व आपातकालीन एम्बुलेंस' : 'First Aid Medical & Ambulance'}</p>
                 <p className="text-[11px] text-muted-foreground">{lang === 'hi' ? 'परिसर प्राथमिक चिकित्सा रिस्पांस' : 'On-Premise First Response'}</p>
               </div>
-              <a href="tel:102" className="px-2.5 py-1 rounded bg-emerald-500/15 text-emerald-600 font-bold">102</a>
+              <a href="tel:102" className="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold shadow-xs">102</a>
             </div>
           </div>
         </div>
 
-        <div className="rounded-2xl border bg-card p-5 shadow-sm space-y-3">
+        <div className="rounded-2xl border border-border/80 bg-card p-5 shadow-sm space-y-3 border-top-telemetry card-3d">
           <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
             <MapPin className="h-4 w-4 text-emerald-500" /> {t('dash.res.assembly')}
           </h3>
@@ -591,7 +591,7 @@ function TechnicianDashboard() {
       </div>
 
       {/* Active Work Orders Table */}
-      <div className="rounded-2xl border bg-card p-5 shadow-sm space-y-4">
+      <div className="rounded-2xl border border-border/80 bg-card p-5 shadow-sm space-y-4 border-top-maintenance card-3d">
         <div className="flex items-center justify-between border-b pb-3">
           <div>
             <h3 className="text-sm font-bold flex items-center gap-2">
@@ -603,7 +603,7 @@ function TechnicianDashboard() {
                 : 'Review assigned repairs and upload after-work camera photos/videos & payment details for AI verification.'}
             </p>
           </div>
-          <span className="rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 px-2.5 py-0.5 text-xs font-bold">
+          <span className="rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 px-2.5 py-0.5 text-xs font-bold shadow-xs">
             {pendingProof.length} {lang === 'hi' ? 'सक्रिय' : 'Active'}
           </span>
         </div>
@@ -615,7 +615,7 @@ function TechnicianDashboard() {
         ) : (
           <div className="space-y-3">
             {pendingProof.map((item) => (
-              <div key={item.id} className="rounded-xl border p-4 space-y-2 bg-background/60">
+              <div key={item.id} className="rounded-xl border border-border/75 p-4 space-y-2 bg-gradient-to-b from-card to-card/90 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 card-3d-hover">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-mono font-bold text-emerald-600">{item.code}</span>
@@ -665,12 +665,12 @@ function SecurityDashboard() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         {/* Visitors Inside */}
-        <div className="rounded-2xl border bg-card p-5 shadow-sm space-y-3">
+        <div className="rounded-2xl border border-border/80 bg-card p-5 shadow-sm space-y-3 border-top-security card-3d">
           <div className="flex items-center justify-between border-b pb-2">
             <h3 className="text-sm font-bold flex items-center gap-2">
               <Users className="h-4 w-4 text-emerald-500" /> {lang === 'hi' ? 'सक्रिय भवन आगंतुक' : 'Active Facility Visitors'}
             </h3>
-            <span className="text-xs text-muted-foreground">{inside.length} {lang === 'hi' ? 'अंदर' : 'inside'}</span>
+            <span className="text-xs text-muted-foreground font-semibold">{inside.length} {lang === 'hi' ? 'अंदर' : 'inside'}</span>
           </div>
           {inside.length === 0 ? (
             <p className="text-xs text-muted-foreground py-6 text-center">
@@ -679,7 +679,7 @@ function SecurityDashboard() {
           ) : (
             <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
               {inside.map((v) => (
-                <div key={v.id} className="rounded-xl border p-2.5 flex items-center justify-between text-xs bg-muted/20">
+                <div key={v.id} className="rounded-xl border border-border/70 p-2.5 flex items-center justify-between text-xs bg-muted/20 shadow-xs hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150 card-3d-hover">
                   <div>
                     <p className="font-bold">{v.visitorName}</p>
                     <p className="text-[11px] text-muted-foreground">{lang === 'hi' ? 'मेजबान:' : 'Host:'} {v.hostName} · {lang === 'hi' ? 'पास:' : 'Pass:'} {v.passNo}</p>
@@ -692,7 +692,7 @@ function SecurityDashboard() {
         </div>
 
         {/* Security Quick Actions */}
-        <div className="rounded-2xl border bg-card p-5 shadow-sm space-y-3">
+        <div className="rounded-2xl border border-border/80 bg-card p-5 shadow-sm space-y-3 border-top-telemetry card-3d">
           <h3 className="text-sm font-bold flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-emerald-500" /> {t('dash.sec.protocols')}
           </h3>

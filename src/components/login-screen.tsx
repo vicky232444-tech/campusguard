@@ -232,40 +232,40 @@ export function LoginScreen() {
             </div>
 
             {/* Mode Switcher Tabs */}
-            <div className="grid grid-cols-2 rounded-xl bg-muted/60 p-1 border">
+            <div className="grid grid-cols-2 rounded-xl bg-muted/70 p-1 border border-border/60 shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]">
               <button
                 type="button"
                 onClick={() => { setMode('signin'); setError(null) }}
                 className={cn(
-                  'flex items-center justify-center gap-2 py-2 text-sm font-semibold rounded-lg transition-all',
+                  'flex items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-lg transition-all duration-200 cursor-pointer',
                   mode === 'signin'
-                    ? 'bg-card text-foreground shadow-sm'
+                    ? 'bg-gradient-to-b from-card to-card/95 text-foreground shadow-[0_2px_6px_rgba(0,0,0,0.08)] -translate-y-0.5 border border-border/60'
                     : 'text-muted-foreground hover:text-foreground'
                 )}
               >
-                <LogIn className="h-4 w-4" />
+                <LogIn className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                 {t('auth.signin')}
               </button>
               <button
                 type="button"
                 onClick={() => { setMode('signup'); setError(null) }}
                 className={cn(
-                  'flex items-center justify-center gap-2 py-2 text-sm font-semibold rounded-lg transition-all',
+                  'flex items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-lg transition-all duration-200 cursor-pointer',
                   mode === 'signup'
-                    ? 'bg-card text-foreground shadow-sm'
+                    ? 'bg-gradient-to-b from-card to-card/95 text-foreground shadow-[0_2px_6px_rgba(0,0,0,0.08)] -translate-y-0.5 border border-border/60'
                     : 'text-muted-foreground hover:text-foreground'
                 )}
               >
-                <UserPlus className="h-4 w-4" />
+                <UserPlus className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                 {t('auth.create_account')}
               </button>
             </div>
 
             <div>
-              <h2 className="text-2xl font-bold tracking-tight">
+              <h2 className="text-2xl font-black tracking-tight">
                 {mode === 'signin' ? t('auth.signin') : t('auth.create_account')}
               </h2>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 {mode === 'signin'
                   ? (lang === 'hi' ? 'अपने क्रेडेंशियल्स दर्ज करके कमांड सेंटर में प्रवेश करें।' : 'Enter your credentials to access the safety command center.')
                   : (lang === 'hi' ? 'निवासी, आगंतुक, सुरक्षा या रखरखाव दल के लिए नया खाता बनाएं।' : 'Register a new account for resident, facilities or security.')}
@@ -273,13 +273,13 @@ export function LoginScreen() {
             </div>
 
             {error && (
-              <div role="alert" className="flex items-start gap-2.5 text-sm text-red-600 dark:text-red-400 bg-red-500/10 border border-red-500/25 rounded-lg p-3">
+              <div role="alert" className="flex items-start gap-2.5 text-sm text-red-600 dark:text-red-400 bg-red-500/10 border border-red-500/25 rounded-xl p-3 shadow-xs">
                 <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
                 <span>{error}</span>
               </div>
             )}
             {success && (
-              <div role="status" className="flex items-start gap-2.5 text-sm text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 rounded-lg p-3">
+              <div role="status" className="flex items-start gap-2.5 text-sm text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 rounded-xl p-3 shadow-xs">
                 <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" />
                 <span>{lang === 'hi' ? 'सफल! डैशबोर्ड लोड हो रहा है…' : 'Success! Loading your security dashboard…'}</span>
               </div>
@@ -289,7 +289,7 @@ export function LoginScreen() {
             {mode === 'signin' && (
               <form onSubmit={handleSignIn} className="space-y-4" noValidate>
                 <div className="space-y-1.5">
-                  <label htmlFor="username" className="text-sm font-medium">
+                  <label htmlFor="username" className="text-xs font-semibold">
                     {t('auth.username')}
                   </label>
                   <div className="relative">
@@ -304,13 +304,13 @@ export function LoginScreen() {
                       value={username}
                       onChange={(e) => { setUsername(e.target.value); setError(null) }}
                       disabled={submitting || success}
-                      className="w-full h-11 rounded-lg border bg-card pl-10 pr-3 text-sm outline-none transition-colors focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/25"
+                      className="w-full h-10 rounded-xl border border-border/80 bg-background/80 pl-10 pr-3 text-xs outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/25"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="password" className="text-sm font-medium">
+                  <label htmlFor="password" className="text-xs font-semibold">
                     {t('auth.password')}
                   </label>
                   <div className="relative">
@@ -324,7 +324,7 @@ export function LoginScreen() {
                       value={password}
                       onChange={(e) => { setPassword(e.target.value); setError(null) }}
                       disabled={submitting || success}
-                      className="w-full h-11 rounded-lg border bg-card pl-10 pr-11 text-sm outline-none transition-colors focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/25"
+                      className="w-full h-10 rounded-xl border border-border/80 bg-background/80 pl-10 pr-11 text-xs outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/25"
                     />
                     <button
                       type="button"
@@ -339,7 +339,7 @@ export function LoginScreen() {
                 <button
                   type="submit"
                   disabled={submitting || success}
-                  className="w-full h-11 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold inline-flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.99] disabled:opacity-60"
+                  className="w-full h-11 rounded-xl btn-3d-primary text-white text-xs font-bold inline-flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
                 >
                   {submitting ? (
                     <><Loader2 className="h-4 w-4 animate-spin" /> {lang === 'hi' ? 'सत्यापित हो रहा है…' : 'Verifying credentials…'}</>
@@ -354,7 +354,7 @@ export function LoginScreen() {
             {mode === 'signup' && (
               <form onSubmit={handleSignUp} className="space-y-3.5" noValidate>
                 <div className="space-y-1.5">
-                  <label htmlFor="reg-name" className="text-sm font-medium">
+                  <label htmlFor="reg-name" className="text-xs font-semibold">
                     {t('auth.fullname')} *
                   </label>
                   <div className="relative">
@@ -365,14 +365,14 @@ export function LoginScreen() {
                       placeholder="e.g. Rahul Sharma"
                       value={name}
                       onChange={(e) => { setName(e.target.value); setError(null) }}
-                      className="w-full h-10 rounded-lg border bg-card pl-10 pr-3 text-sm outline-none focus:border-emerald-500"
+                      className="w-full h-10 rounded-xl border border-border/80 bg-background/80 pl-10 pr-3 text-xs outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/25"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <label htmlFor="reg-user" className="text-sm font-medium">
+                    <label htmlFor="reg-user" className="text-xs font-semibold">
                       {t('auth.username')} *
                     </label>
                     <input
@@ -381,18 +381,18 @@ export function LoginScreen() {
                       placeholder="e.g. rahul24"
                       value={username}
                       onChange={(e) => { setUsername(e.target.value); setError(null) }}
-                      className="w-full h-10 rounded-lg border bg-card px-3 text-sm outline-none focus:border-emerald-500"
+                      className="w-full h-10 rounded-xl border border-border/80 bg-background/80 px-3 text-xs outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/25"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label htmlFor="reg-role" className="text-sm font-medium">
+                    <label htmlFor="reg-role" className="text-xs font-semibold">
                       {t('auth.role')} *
                     </label>
                     <select
                       id="reg-role"
                       value={regRole}
                       onChange={(e) => setRegRole(e.target.value as any)}
-                      className="w-full h-10 rounded-lg border bg-card px-3 text-sm outline-none focus:border-emerald-500"
+                      className="w-full h-10 rounded-xl border border-border/80 bg-background/80 px-3 text-xs outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/25"
                     >
                       <option value="STUDENT">User / Resident (निवासी / नागरिक)</option>
                       <option value="MAINTENANCE">Maintenance Technician (रखरखाव तकनीशियन)</option>
@@ -402,7 +402,7 @@ export function LoginScreen() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="reg-email" className="text-sm font-medium">
+                  <label htmlFor="reg-email" className="text-xs font-semibold">
                     {t('auth.email')} *
                   </label>
                   <div className="relative">
@@ -413,27 +413,27 @@ export function LoginScreen() {
                       placeholder="e.g. rahul@campus.edu"
                       value={email}
                       onChange={(e) => { setEmail(e.target.value); setError(null) }}
-                      className="w-full h-10 rounded-lg border bg-card pl-10 pr-3 text-sm outline-none focus:border-emerald-500"
+                      className="w-full h-10 rounded-xl border border-border/80 bg-background/80 pl-10 pr-3 text-xs outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/25"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <label htmlFor="reg-dept" className="text-sm font-medium">
+                    <label htmlFor="reg-dept" className="text-xs font-semibold">
                       {t('auth.dept')}
                     </label>
                     <input
                       id="reg-dept"
                       type="text"
-                      placeholder="e.g. CSE Year 2"
+                      placeholder="e.g. Residential Wing A"
                       value={dept}
                       onChange={(e) => setDept(e.target.value)}
-                      className="w-full h-10 rounded-lg border bg-card px-3 text-sm outline-none focus:border-emerald-500"
+                      className="w-full h-10 rounded-xl border border-border/80 bg-background/80 px-3 text-xs outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/25"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label htmlFor="reg-pwd" className="text-sm font-medium">
+                    <label htmlFor="reg-pwd" className="text-xs font-semibold">
                       {t('auth.password')} *
                     </label>
                     <input
@@ -442,7 +442,7 @@ export function LoginScreen() {
                       placeholder="Min 6 chars"
                       value={password}
                       onChange={(e) => { setPassword(e.target.value); setError(null) }}
-                      className="w-full h-10 rounded-lg border bg-card px-3 text-sm outline-none focus:border-emerald-500"
+                      className="w-full h-10 rounded-xl border border-border/80 bg-background/80 px-3 text-xs outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/25"
                     />
                   </div>
                 </div>
@@ -450,7 +450,7 @@ export function LoginScreen() {
                 <button
                   type="submit"
                   disabled={submitting || success}
-                  className="w-full h-11 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold inline-flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.99] disabled:opacity-60"
+                  className="w-full h-11 rounded-xl btn-3d-primary text-white text-xs font-bold inline-flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
                 >
                   {submitting ? (
                     <><Loader2 className="h-4 w-4 animate-spin" /> {lang === 'hi' ? 'खाता तैयार हो रहा है…' : 'Creating your account…'}</>
@@ -461,8 +461,8 @@ export function LoginScreen() {
               </form>
             )}
 
-            {/* Demo accounts helper */}
-            <div className="rounded-xl border bg-card/60 overflow-hidden">
+            {/* Test accounts helper */}
+            <div className="rounded-2xl border border-border/80 bg-card/80 overflow-hidden shadow-sm card-3d">
               <button
                 type="button"
                 onClick={() => setShowAccounts((v) => !v)}

@@ -100,11 +100,11 @@ function HoldButton({ onTriggered, disabled, onHoldStart, onHoldEnd, isMassBroad
         onPointerLeave={() => stop(false)}
         onContextMenu={(e) => e.preventDefault()}
         className={cn(
-          'relative flex h-40 w-40 select-none items-center justify-center rounded-full text-white shadow-xl transition-all',
+          'relative flex h-44 w-44 select-none items-center justify-center rounded-full text-white transition-all duration-200 sos-beacon-3d cursor-pointer',
           isMassBroadcast
-            ? 'bg-gradient-to-b from-red-600 via-rose-700 to-red-900 border-2 border-red-400'
-            : 'bg-gradient-to-b from-red-500 via-red-600 to-red-700',
-          'disabled:opacity-50 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-500/40 hover:shadow-red-500/30',
+            ? 'bg-gradient-to-b from-red-500 via-rose-600 to-red-800 border-4 border-red-300/80 shadow-[0_12px_30px_rgba(239,68,68,0.5),inset_0_2px_4px_rgba(255,255,255,0.4)]'
+            : 'bg-gradient-to-b from-red-500 via-red-600 to-red-700 border-4 border-red-300/60 shadow-[0_10px_25px_rgba(239,68,68,0.45),inset_0_2px_4px_rgba(255,255,255,0.4)]',
+          'disabled:opacity-50 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-500/50',
         )}
       >
         <svg className="absolute inset-0 -rotate-90" viewBox="0 0 128 128">
